@@ -1,2 +1,2 @@
 # LenguajeVAGAX
-[CLICK AQUI](LenguajeVAGAX/docs/Diseno-Proyecto-Lenguajes-VAGAX.pdf)
+[CLICK AQUI](docs/Diseno-Proyecto-Lenguajes-de-Programacion-VAGAX.pdf)
