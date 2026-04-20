@@ -65,6 +65,14 @@ OR  : '||' ;
 AND : '&&' ;
 NOT : '!' ;
 
+// --- TOKENS LIBRERIA GRAFICA
+PLOTVAG    : 'plotvag';
+SHOWVAG    : 'showvag';
+TITLEVAG   : 'titlevag';
+XLABELVAG  : 'xlabelvag';
+YLABELVAG  : 'ylabelvag';
+
+
 // --- COMENTARIOS Y ESPACIOS ---
 COMMENT : '//' ~[\r\n]* -> skip ;
 WS      : [ \t\r\n]+ -> skip ;
