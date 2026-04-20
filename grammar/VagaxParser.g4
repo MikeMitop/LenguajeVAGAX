@@ -128,3 +128,14 @@ literal
     | STRING
     | BOOL_LIT
     ;
+
+//------ REGLAS GRAFICAS ------
+
+instruccionGrafica
+    : PLOTVAG '(' expr ',' expr ')' ';' // plotvag(x,y);
+    | TITLEVAG '('  STRING ')' ';' // titlevag("titulo");
+    | SHOWVAG '('  ')' ';' // showvag();
+    :
+    
+    
+    
