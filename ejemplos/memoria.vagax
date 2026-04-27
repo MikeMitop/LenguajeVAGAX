@@ -1,0 +1,8 @@
+intvag x = 10;
+intvag y = 20;
+
+memvag();
+
+freevag(x);
+
+memvag();
