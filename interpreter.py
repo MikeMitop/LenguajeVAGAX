@@ -3,7 +3,7 @@ from grammar.generated.VagaxParser import VagaxParser
 from memory_manager import MemoryManager
 from librerias.MATHVAG import MATHVAG
 from librerias.grafvag import GRAFVAG
-
+from librerias.ARCHIVOSVAG  import ARCHIVOSVAG
 
 class VAGAXInterpreter(VagaxParserVisitor):
 
@@ -168,34 +168,52 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if ctx.argList():
             args = [self.visit(e) for e in ctx.argList().expr()]
 
-        # 2. BLOQUE DE FUNCIONES NATIVAS (Tu librería propia)
-        # Esto intercepta la llamada antes de buscar en self.functions
-        if name == "sin":
-            return MATHVAG.sin(args[0])
+        # 2. BLOQUE DE FUNCIONES NATIVAS (Ordenado)
         
-        if name == "cos":
-            return MATHVAG.cos(args[0])
-            
-        if name == "sqrt":
-            return MATHVAG.sqrt(args[0])
-            
-        if name == "pi_val":
-            return MATHVAG.PI
-            
-             # Pasamos etiquetas (args[0]) y valores (args[1]) al motor
-        if name == "plot_pastel":
-            if len(args) < 2:
-                raise Exception(f"La función {name} esperaba 2 argumentos y recibió {len(args)}")
-            return GRAFVAG.plot_pastel(args[0], args[1])
+        # Matemáticas Básicas (Ya las tenías)
+        if name == "sin": return MATHVAG.sin(args[0])
+        if name == "cos": return MATHVAG.cos(args[0])
+        if name == "sqrt": return MATHVAG.sqrt(args[0])
+        if name == "pi_val": return MATHVAG.PI
         
-        # En la misma sección de funciones nativas:
-        if name == "plot_barras":
-            return GRAFVAG.plot_barras(args[0], args[1])
+        # Matemáticas Nuevas
+        if name == "tan": return MATHVAG.tan(args[0])
+        if name == "asin": return MATHVAG.asin(args[0])
+        if name == "acos": return MATHVAG.acos(args[0])
+        if name == "atan": return MATHVAG.atan(args[0])
+        if name == "atan2": return MATHVAG.atan2(args[0], args[1])
+        if name == "e_val": return MATHVAG.E
+        if name == "factorial": return MATHVAG.factorial(args[0])
+        if name == "is_prime": return MATHVAG.is_prime(args[0])
+        if name == "round_val": return MATHVAG.round_val(args[0], args[1])
 
-        if name == "plot_lineal":
-            return GRAFVAG.plot_lineal(args[0], args[1])
+        # Archivos y CSV
+        if name == "file_write": return ARCHIVOSVAG.file_write(args[0], args[1])
+        if name == "file_read": return ARCHIVOSVAG.file_read(args[0])
+        if name == "file_append": return ARCHIVOSVAG.file_append(args[0], args[1])
+        if name == "file_exists": return ARCHIVOSVAG.file_exists(args[0])
+        if name == "file_delete": return ARCHIVOSVAG.file_delete(args[0])
+        if name == "file_lines": return ARCHIVOSVAG.file_lines(args[0])
+        if name == "file_write_lines": return ARCHIVOSVAG.file_write_lines(args[0], args[1])
+        if name == "csv_read": return ARCHIVOSVAG.csv_read(args[0])
+        if name == "csv_write": return ARCHIVOSVAG.csv_write(args[0], args[1])
 
-        # 3. LÓGICA ORIGINAL PARA FUNCIONES DEL USUARIO
+        # Listas y Texto
+        if name == "len": return len(args[0])
+        if name == "get": return args[0][args[1]]
+        if name == "append": 
+            args[0].append(args[1])
+            return args[0]
+        if name == "contains": return args[1] in args[0]
+        if name == "str": return str(args[0])
+        if name == "range": return list(range(int(args[0]), int(args[1])))
+
+        # Gráficas (Deben estar aquí antes del error de "no definida")
+        if name == "plot_pastel": return GRAFVAG.plot_pastel(args[0], args[1])
+        if name == "plot_barras": return GRAFVAG.plot_barras(args[0], args[1])
+        if name == "plot_lineal": return GRAFVAG.plot_lineal(args[0], args[1])
+
+        # 3. LÓGICA PARA FUNCIONES DEL USUARIO (Solo si no es una nativa)
         if name not in self.functions:
             raise Exception(f"Función no definida: {name}")
 
@@ -203,11 +221,9 @@ class VAGAXInterpreter(VagaxParserVisitor):
         params = func["params"]
 
         if len(args) != len(params):
-            raise Exception(
-                f"La función {name} esperaba {len(params)} argumentos y recibió {len(args)}"
-            )
+            raise Exception(f"La función {name} esperaba {len(params)} argumentos y recibió {len(args)}")
 
-        # ... resto de tu código de manejo de memoria y variables locales ...
+        # Manejo de memoria local
         local_vars = {}
         for p, a in zip(params, args):
             address = self.memory.allocate(p, a)
