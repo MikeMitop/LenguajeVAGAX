@@ -1,6 +1,8 @@
 from grammar.generated.VagaxParserVisitor import VagaxParserVisitor
 from grammar.generated.VagaxParser import VagaxParser
 from memory_manager import MemoryManager
+from librerias.MATHVAG import MATHVAG
+from librerias.grafvag import GRAFVAG
 
 
 class VAGAXInterpreter(VagaxParserVisitor):
@@ -159,53 +161,72 @@ class VAGAXInterpreter(VagaxParserVisitor):
     # -------- LLAMADA A FUNCIÓN --------
 
     def visitFunctionCall(self, ctx):
-
         name = ctx.ID().getText()
 
+        # 1. EVALUAR ARGUMENTOS PRIMERO
+        args = []
+        if ctx.argList():
+            args = [self.visit(e) for e in ctx.argList().expr()]
+
+        # 2. BLOQUE DE FUNCIONES NATIVAS (Tu librería propia)
+        # Esto intercepta la llamada antes de buscar en self.functions
+        if name == "sin":
+            return MATHVAG.sin(args[0])
+        
+        if name == "cos":
+            return MATHVAG.cos(args[0])
+            
+        if name == "sqrt":
+            return MATHVAG.sqrt(args[0])
+            
+        if name == "pi_val":
+            return MATHVAG.PI
+            
+             # Pasamos etiquetas (args[0]) y valores (args[1]) al motor
+        if name == "plot_pastel":
+            if len(args) < 2:
+                raise Exception(f"La función {name} esperaba 2 argumentos y recibió {len(args)}")
+            return GRAFVAG.plot_pastel(args[0], args[1])
+        
+        # En la misma sección de funciones nativas:
+        if name == "plot_barras":
+            return GRAFVAG.plot_barras(args[0], args[1])
+
+        if name == "plot_lineal":
+            return GRAFVAG.plot_lineal(args[0], args[1])
+
+        # 3. LÓGICA ORIGINAL PARA FUNCIONES DEL USUARIO
         if name not in self.functions:
             raise Exception(f"Función no definida: {name}")
 
         func = self.functions[name]
         params = func["params"]
 
-        args = []
-
-        if ctx.argList():
-            args = [self.visit(e) for e in ctx.argList().expr()]
-
         if len(args) != len(params):
-
             raise Exception(
                 f"La función {name} esperaba {len(params)} argumentos y recibió {len(args)}"
             )
 
+        # ... resto de tu código de manejo de memoria y variables locales ...
         local_vars = {}
-
         for p, a in zip(params, args):
-
             address = self.memory.allocate(p, a)
             local_vars[p] = address
 
         old_vars = self.variables
-
         self.variables = {**old_vars, **local_vars}
 
         result = None
-
         for stmt in func["ctx"].block().statement():
-
             if stmt.returnStmt():
-
                 result = self.visit(stmt.returnStmt().expr())
                 break
-
             self.visit(stmt)
 
         for v in local_vars.values():
             self.memory.free(v)
 
         self.variables = old_vars
-
         return result
 
     # -------- EXPRESIONES --------
