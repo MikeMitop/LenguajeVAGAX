@@ -4,6 +4,8 @@ from memory_manager import MemoryManager
 from librerias.MATHVAG import MATHVAG
 from librerias.grafvag import GRAFVAG
 from librerias.ARCHIVOSVAG  import ARCHIVOSVAG
+from librerias.MATRXVAG import MATRXVAG
+from librerias.SYSVAG import SYSVAG
 
 
 class ReturnSignal(Exception):
