@@ -1,0 +1,54 @@
+// ============================================
+// Test de Recursión en VAGAX
+// ============================================
+
+// --- 1. FACTORIAL RECURSIVO ---
+// factorial(5) = 5 * 4 * 3 * 2 * 1 = 120
+
+functionvag factorial(n) {
+    ifvag (n <= 1) {
+        returnvag 1;
+    } endvag
+    returnvag n * factorial(n - 1);
+} endvag
+
+factorial(5);
+
+// --- 2. FIBONACCI RECURSIVO ---
+// fib(7) = 13  (0,1,1,2,3,5,8,13)
+
+functionvag fib(n) {
+    ifvag (n <= 0) {
+        returnvag 0;
+    } endvag
+    ifvag (n == 1) {
+        returnvag 1;
+    } endvag
+    returnvag fib(n - 1) + fib(n - 2);
+} endvag
+
+fib(7);
+
+// --- 3. SUMA RECURSIVA ---
+// sumaRec(10) = 10 + 9 + ... + 1 = 55
+
+functionvag sumaRec(n) {
+    ifvag (n <= 0) {
+        returnvag 0;
+    } endvag
+    returnvag n + sumaRec(n - 1);
+} endvag
+
+sumaRec(10);
+
+// --- 4. POTENCIA RECURSIVA ---
+// potencia(2, 8) = 256
+
+functionvag potencia(base, exp) {
+    ifvag (exp == 0) {
+        returnvag 1;
+    } endvag
+    returnvag base * potencia(base, exp - 1);
+} endvag
+
+potencia(2, 8);
