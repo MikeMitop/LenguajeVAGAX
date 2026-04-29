@@ -177,22 +177,64 @@ class VAGAXInterpreter(VagaxParserVisitor):
 
         # 2. BLOQUE DE FUNCIONES NATIVAS (Ordenado)
         
-        # Matemáticas Básicas (Ya las tenías)
+        # Matemáticas Básicas 
         if name == "sin": return MATHVAG.sin(args[0])
         if name == "cos": return MATHVAG.cos(args[0])
         if name == "sqrt": return MATHVAG.sqrt(args[0])
         if name == "pi_val": return MATHVAG.PI
         
         # Matemáticas Nuevas
+        if name == "abs_val": return MATHVAG.abs_val(args[0])
+        if name == "factorial": return MATHVAG.factorial(args[0])
+        if name == "power": return MATHVAG.power(args[0], args[1])
+        if name == "sqrt": return MATHVAG.sqrt(args[0])
+        if name == "cbrt": return MATHVAG.cbrt(args[0])
+        if name == "root": return MATHVAG.root(args[0], args[1])
+
+        # Exponenciales y Logaritmos
+        if name == "exp": return MATHVAG.exp(args[0])
+        if name == "log": return MATHVAG.log(args[0])
+        if name == "log10": return MATHVAG.log10(args[0])
+        if name == "log2": return MATHVAG.log2(args[0])
+        if name == "log_base": return MATHVAG.log_base(args[0], args[1])
+
+        # Trigonometría Completa
+        if name == "sin": return MATHVAG.sin(args[0])
+        if name == "cos": return MATHVAG.cos(args[0])
         if name == "tan": return MATHVAG.tan(args[0])
         if name == "asin": return MATHVAG.asin(args[0])
         if name == "acos": return MATHVAG.acos(args[0])
         if name == "atan": return MATHVAG.atan(args[0])
         if name == "atan2": return MATHVAG.atan2(args[0], args[1])
-        if name == "e_val": return MATHVAG.E
-        if name == "factorial": return MATHVAG.factorial(args[0])
+        if name == "sinh": return MATHVAG.sinh(args[0])
+        if name == "cosh": return MATHVAG.cosh(args[0])
+        if name == "tanh": return MATHVAG.tanh(args[0])
+
+        # Teoría de Números
+        if name == "gcd": return MATHVAG.gcd(args[0], args[1])
+        if name == "lcm": return MATHVAG.lcm(args[0], args[1])
         if name == "is_prime": return MATHVAG.is_prime(args[0])
+
+        # Estadística y Vectores
+        if name == "mean": return MATHVAG.mean(args[0])
+        if name == "median": return MATHVAG.median(args[0])
+        if name == "variance": return MATHVAG.variance(args[0])
+        if name == "std_dev": return MATHVAG.standard_deviation(args[0])
+        if name == "dot_product": return MATHVAG.dot_product(args[0], args[1])
+        if name == "norm": return MATHVAG.norm(args[0])
+
+        # Combinatoria
+        if name == "combinations": return MATHVAG.combinations(args[0], args[1])
+        if name == "permutations": return MATHVAG.permutations(args[0], args[1])
+
+        # Redondeo, Conversión y Constantes
+        if name == "floor": return MATHVAG.floor_val(args[0])
+        if name == "ceil": return MATHVAG.ceil_val(args[0])
         if name == "round_val": return MATHVAG.round_val(args[0], args[1])
+        if name == "degrees": return MATHVAG.degrees(args[0])
+        if name == "radians": return MATHVAG.radians(args[0])
+        if name == "pi_val": return MATHVAG.PI
+        if name == "e_val": return MATHVAG.E
 
         # Archivos y CSV
         if name == "file_write": return ARCHIVOSVAG.file_write(args[0], args[1])
@@ -219,6 +261,52 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "plot_pastel": return GRAFVAG.plot_pastel(args[0], args[1])
         if name == "plot_barras": return GRAFVAG.plot_barras(args[0], args[1])
         if name == "plot_lineal": return GRAFVAG.plot_lineal(args[0], args[1])
+
+
+        if name == "mat_zeros": return MATRXVAG.mat_zeros(args[0], args[1])
+        if name == "mat_ones": return MATRXVAG.mat_ones(args[0], args[1])
+        if name == "mat_identity": return MATRXVAG.mat_identity(args[0])
+        if name == "mat_set": return MATRXVAG.mat_set(args[0], args[1], args[2], args[3])
+        if name == "mat_get": return MATRXVAG.mat_get(args[0], args[1], args[2])
+        if name == "mat_row": return MATRXVAG.mat_row(args[0], args[1])
+        if name == "mat_col": return MATRXVAG.mat_col(args[0], args[1])
+        if name == "mat_shape": return MATRXVAG.mat_shape(args[0])
+        if name == "mat_add": return MATRXVAG.mat_add(args[0], args[1])
+        if name == "mat_sub": return MATRXVAG.mat_sub(args[0], args[1])
+        if name == "mat_mul": return MATRXVAG.mat_mul(args[0], args[1])
+        if name == "mat_scalar": return MATRXVAG.mat_scalar(args[0], args[1])
+        if name == "mat_transpose": return MATRXVAG.mat_transpose(args[0])
+        if name == "mat_det": return MATRXVAG.mat_det(args[0])
+        if name == "mat_inverse": return MATRXVAG.mat_inverse(args[0])
+        if name == "mat_trace": return MATRXVAG.mat_trace(args[0])
+        if name == "mat_norm": return MATRXVAG.mat_norm(args[0])
+        if name == "mat_dot": return MATRXVAG.mat_dot(args[0], args[1])
+
+        # --- SECCIÓN SYSVAG (Utilidades del Sistema) ---
+        if name == "get_filename": 
+            return SYSVAG.get_filename()
+            
+        if name == "get_args": 
+            return SYSVAG.get_args()
+            
+        if name == "get_os": 
+            return SYSVAG.get_os()
+            
+        if name == "get_python_version": 
+            return SYSVAG.get_python_version()
+            
+        if name == "get_memory_usage": 
+            # Requiere un argumento (el objeto a medir)
+            return SYSVAG.get_memory_usage(args[0])
+            
+        if name == "get_platform_info": 
+            return SYSVAG.get_platform_info()
+            
+        if name == "get_current_directory": 
+            return SYSVAG.get_current_directory()
+
+        if name == "exit_program":
+            return SYSVAG.exit_program()
 
         # 3. LÓGICA PARA FUNCIONES DEL USUARIO (Solo si no es una nativa)
         if name not in self.functions:
