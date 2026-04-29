@@ -5,6 +5,13 @@ from librerias.MATHVAG import MATHVAG
 from librerias.grafvag import GRAFVAG
 from librerias.ARCHIVOSVAG  import ARCHIVOSVAG
 
+
+class ReturnSignal(Exception):
+    """Señal de control de flujo para propagar returnvag a través de bloques anidados."""
+    def __init__(self, value):
+        self.value = value
+
+
 class VAGAXInterpreter(VagaxParserVisitor):
 
     def __init__(self):
@@ -42,7 +49,7 @@ class VAGAXInterpreter(VagaxParserVisitor):
     def visitBlock(self, ctx):
 
         for stmt in ctx.statement():
-            self.visit(stmt)
+            self.visit(stmt)  # ReturnSignal se propaga naturalmente
 
     # -------- DECLARACIÓN DE VARIABLES --------
 
@@ -223,27 +230,38 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if len(args) != len(params):
             raise Exception(f"La función {name} esperaba {len(params)} argumentos y recibió {len(args)}")
 
-        # Manejo de memoria local
+        # Crear frame local con parámetros (aislamiento de pila)
         local_vars = {}
         for p, a in zip(params, args):
             address = self.memory.allocate(p, a)
             local_vars[p] = address
 
+        # Guardar scope del llamador y crear nuevo scope
         old_vars = self.variables
         self.variables = {**old_vars, **local_vars}
 
         result = None
-        for stmt in func["ctx"].block().statement():
-            if stmt.returnStmt():
-                result = self.visit(stmt.returnStmt().expr())
-                break
-            self.visit(stmt)
+        try:
+            # Ejecutar el cuerpo de la función
+            for stmt in func["ctx"].block().statement():
+                self.visit(stmt)
+        except ReturnSignal as r:
+            # Capturar el valor de returnvag (propagado desde cualquier nivel)
+            result = r.value
+        finally:
+            # SIEMPRE restaurar scope y liberar memoria local
+            for v in local_vars.values():
+                self.memory.free(v)
+            self.variables = old_vars
 
-        for v in local_vars.values():
-            self.memory.free(v)
-
-        self.variables = old_vars
         return result
+
+    # -------- RETURN --------
+
+    def visitReturnStmt(self, ctx):
+        """Lanza ReturnSignal para propagar el valor de retorno."""
+        value = self.visit(ctx.expr())
+        raise ReturnSignal(value)
 
     # -------- EXPRESIONES --------
 
