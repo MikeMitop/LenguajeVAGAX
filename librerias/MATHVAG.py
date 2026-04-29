@@ -63,7 +63,7 @@ class MATHVAG:
     @staticmethod
     def log(x):
         if x <= 0: raise Exception("Logaritmo de número <= 0")
-        # Algoritmo de alta precisão (transformação para convergir rápido)
+    
         n = 0
         while x > 2:
             x /= MATHVAG.E
