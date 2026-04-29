@@ -24,19 +24,12 @@ class ARCHIVOSVAG:
 
     @staticmethod
     def file_exists(ruta):
+        # Verificamos si existe intentando abrirlo.
         try:
             with open(ruta, 'r') as f:
                 return True
         except:
             return False
-
-    @staticmethod
-    def file_delete(ruta):
-        import os
-        if ARCHIVOSVAG.file_exists(ruta):
-            os.remove(ruta)
-            return True
-        return False
 
     @staticmethod
     def file_lines(ruta):
@@ -56,10 +49,11 @@ class ARCHIVOSVAG:
     @staticmethod
     def csv_read(ruta):
         lineas = ARCHIVOSVAG.file_lines(ruta)
-        # Retorna una lista de listas separando por comas
+        # Lógica manual de split para no usar 'import csv'
         return [l.split(',') for l in lineas if l.strip()]
 
     @staticmethod
     def csv_write(ruta, matriz):
+        # Lógica manual de join para no usar 'import csv'
         lineas = [",".join(map(str, fila)) for fila in matriz]
         return ARCHIVOSVAG.file_write_lines(ruta, lineas)
