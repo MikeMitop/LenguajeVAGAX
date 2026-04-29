@@ -2,7 +2,7 @@ from antlr4 import InputStream, CommonTokenStream
 from grammar.generated.VagaxLexer import VagaxLexer
 from grammar.generated.VagaxParser import VagaxParser
 from interpreter import VAGAXInterpreter
-from librerias.archivos import leer_archivo
+from librerias.ARCHIVOSVAG import ARCHIVOSVAG
 
 
 def main():
@@ -10,7 +10,7 @@ def main():
         nombre_archivo = input("Ingrese el archivo .vagax: ").strip()
         ruta = f"ejemplos/{nombre_archivo}"
 
-        codigo = leer_archivo(ruta)
+        codigo = ARCHIVOSVAG.file_read(ruta)
 
         input_stream = InputStream(codigo)
         lexer = VagaxLexer(input_stream)
