@@ -1,0 +1,62 @@
+functionvag prueba_regresion_lineal() {
+    "--- REGRESION LINEAL ---";
+    listvag x_lin = range(0, 0);
+    append(x_lin, 1);
+    append(x_lin, 2);
+    append(x_lin, 3);
+    append(x_lin, 4);
+    append(x_lin, 5);
+
+    listvag y_lin = range(0, 0);
+    append(y_lin, 3);
+    append(y_lin, 5);
+    append(y_lin, 7);
+    append(y_lin, 9);
+    append(y_lin, 11);
+
+    listvag modelo_lin = lin_reg_fit(x_lin, y_lin);
+    
+    "Modelo ajustado [m, b]:";
+    str(modelo_lin);
+
+    intvag prediccion = lin_reg_predict(modelo_lin, 6);
+    "Prediccion para x=6 (esperado 13):";
+    prediccion;
+} endvag
+
+functionvag prueba_regresion_logistica() {
+    "--- REGRESION LOGISTICA ---";
+    listvag x_log = range(0, 0);
+    append(x_log, 1);
+    append(x_log, 2);
+    append(x_log, 3);
+    append(x_log, 8);
+    append(x_log, 9);
+    append(x_log, 10);
+
+    listvag y_log = range(0, 0);
+    append(y_log, 0);
+    append(y_log, 0);
+    append(y_log, 0);
+    append(y_log, 1);
+    append(y_log, 1);
+    append(y_log, 1);
+
+    listvag modelo_log = log_reg_fit(x_log, y_log, 0.1, 1000);
+
+    "Modelo logistico ajustado [w, b]:";
+    str(modelo_log);
+
+    intvag p1 = log_reg_predict(modelo_log, 2);
+    intvag p2 = log_reg_predict(modelo_log, 9);
+
+    "Probabilidad para x=2 (esperado cercano a 0):";
+    p1;
+    "Probabilidad para x=9 (esperado cercano a 1):";
+    p2;
+} endvag
+
+"Iniciando pruebas de REGREVAG...";
+prueba_regresion_lineal();
+prueba_regresion_logistica();
+"Pruebas finalizadas.";

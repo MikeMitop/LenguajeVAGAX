@@ -1,0 +1,16 @@
+functionvag taylor_exp(x, n) {
+    ifvag (n == 0) {
+        returnvag 1;
+    } endvag
+    returnvag (x ^ n) / factorial(n) + taylor_exp(x, n - 1);
+} endvag
+
+listvag casos = file_lines("ejemplos/casos.txt");
+intvag total = len(casos);
+intvag i = 0;
+
+whilevag (i < total) {
+    intvag x = to_num(get(casos, i));
+    taylor_exp(x, 15);
+    i = i + 1;
+} endvag

@@ -1,0 +1,33 @@
+functionvag bubblesort(arr) {
+    intvag n = len(arr);
+    intvag i = 0;
+    intvag j = 0;
+    intvag temp = 0;
+
+    whilevag (i < n - 1) {
+        j = 0;
+        whilevag (j < n - i - 1) {
+            ifvag (get(arr, j) > get(arr, j + 1)) {
+                // intercambio de valores 
+                temp = get(arr, j);
+                set(arr, j, get(arr, j + 1));
+                set(arr, j + 1, temp);
+            } endvag
+            j = j + 1;
+        } endvag
+        i = i + 1;
+    } endvag
+    returnvag arr;
+} endvag
+
+listvag lista = range(0, 0);
+append(lista, 10);
+append(lista, 9);
+append(lista, 9);
+append(lista, 9);
+append(lista, 11);
+append(lista, 10);
+append(lista, -1);
+
+bubblesort(lista);
+str(lista);

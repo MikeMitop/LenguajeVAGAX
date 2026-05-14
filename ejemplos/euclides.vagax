@@ -1,0 +1,8 @@
+functionvag gcd(n, m) {
+    ifvag (m == 0) {
+        returnvag n;
+    } endvag
+    returnvag gcd(m, n % m);
+} endvag
+
+gcd(48, 18);
