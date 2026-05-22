@@ -44,6 +44,33 @@ class MLP:
 
         return params
 
+    def predict(self, X, threshold=0.5):
+        """Predicción con umbral para clasificación binaria"""
+        pred = self.forward(X)
+        result = []
+        for i in range(pred.shape[0]):
+            fila = []
+            for j in range(pred.shape[1]):
+                if pred.shape[1] == 1:
+                    fila.append(1 if pred.data[i][j] >= threshold else 0)
+                else:
+                    fila.append(pred.data[i][j])
+            result.append(fila)
+        from librerias.VAGML.Tensor import Tensor
+        return Tensor(result)
+
+    def train_mode(self):
+        """Activa modo entrenamiento (Dropout activo)"""
+        for layer in self.layers:
+            if hasattr(layer, 'training'):
+                layer.training = True
+
+    def eval_mode(self):
+        """Activa modo evaluación (Dropout inactivo)"""
+        for layer in self.layers:
+            if hasattr(layer, 'training'):
+                layer.training = False
+
     # =====================================
     # GUARDAR MODELO .VAGML
     # =====================================
