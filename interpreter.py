@@ -1,10 +1,16 @@
+# interpreter.py
 from grammar.generated.VagaxParserVisitor import VagaxParserVisitor
 from grammar.generated.VagaxParser import VagaxParser
 from memory_manager import MemoryManager
 from librerias.MATHVAG import MATHVAG
 from librerias.grafvag import GRAFVAG
-from librerias.ARCHIVOSVAG  import ARCHIVOSVAG
+from librerias.ARCHIVOSVAG import ARCHIVOSVAG
 from librerias.REGREVAG import REGREVAG
+from librerias.CLASIFVAG import CLASIFVAG
+from librerias.DATASETVAG import DATASETVAG
+from librerias.MATRXVAG import MATRXVAG
+from librerias.LEARNVAGAX import LEARNVAGAX
+from librerias.VAGML.Tensor import Tensor
 
 
 class ReturnSignal(Exception):
@@ -176,26 +182,105 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if ctx.argList():
             args = [self.visit(e) for e in ctx.argList().expr()]
 
-        # 2. BLOQUE DE FUNCIONES NATIVAS (Ordenado)
-        
-        # Matemáticas Básicas (Ya las tenías)
+        # 2. BLOQUE DE FUNCIONES NATIVAS
+
+        # =============================================
+        # MATEMÁTICAS BÁSICAS (MATHVAG)
+        # =============================================
         if name == "sin": return MATHVAG.sin(args[0])
         if name == "cos": return MATHVAG.cos(args[0])
-        if name == "sqrt": return MATHVAG.sqrt(args[0])
-        if name == "pi_val": return MATHVAG.PI
-        
-        # Matemáticas Nuevas
         if name == "tan": return MATHVAG.tan(args[0])
+        if name == "sqrt": return MATHVAG.sqrt(args[0])
+        if name == "cbrt": return MATHVAG.cbrt(args[0])
+        if name == "abs_val": return MATHVAG.abs_val(args[0])
+        if name == "pi_val": return MATHVAG.PI
+        if name == "e_val": return MATHVAG.E
         if name == "asin": return MATHVAG.asin(args[0])
         if name == "acos": return MATHVAG.acos(args[0])
         if name == "atan": return MATHVAG.atan(args[0])
         if name == "atan2": return MATHVAG.atan2(args[0], args[1])
-        if name == "e_val": return MATHVAG.E
+        if name == "sinh": return MATHVAG.sinh(args[0])
+        if name == "cosh": return MATHVAG.cosh(args[0])
+        if name == "tanh": return MATHVAG.tanh(args[0])
+        if name == "exp": return MATHVAG.exp(args[0])
+        if name == "log": return MATHVAG.log(args[0])
+        if name == "log10": return MATHVAG.log10(args[0])
+        if name == "log2": return MATHVAG.log2(args[0])
+        if name == "logb": return MATHVAG.logb(args[0], args[1])
+        if name == "power": return MATHVAG.power(args[0], args[1])
         if name == "factorial": return MATHVAG.factorial(args[0])
         if name == "is_prime": return MATHVAG.is_prime(args[0])
+        if name == "gcd": return MATHVAG.gcd(args[0], args[1])
+        if name == "lcm": return MATHVAG.lcm(args[0], args[1])
         if name == "round_val": return MATHVAG.round_val(args[0], args[1])
+        if name == "floor_val": return MATHVAG.floor_val(args[0])
+        if name == "ceil_val": return MATHVAG.ceil_val(args[0])
+        if name == "clamp": return MATHVAG.clamp(args[0], args[1], args[2])
+        if name == "degrees": return MATHVAG.degrees(args[0])
+        if name == "radians": return MATHVAG.radians(args[0])
+        if name == "combinations": return MATHVAG.combinations(args[0], args[1])
+        if name == "permutations_val": return MATHVAG.permutations(args[0], args[1])
+        if name == "nroot": return MATHVAG.nroot(args[0], args[1])
 
-        # Archivos y CSV
+        # =============================================
+        # ESTADÍSTICA (MATHVAG)
+        # =============================================
+        if name == "mean": return MATHVAG.mean(args[0])
+        if name == "median": return MATHVAG.median(args[0])
+        if name == "variance": return MATHVAG.variance(args[0])
+        if name == "std_dev": return MATHVAG.std_dev(args[0])
+        if name == "covariance": return MATHVAG.covariance(args[0], args[1])
+        if name == "correlation": return MATHVAG.correlation(args[0], args[1])
+        if name == "percentile": return MATHVAG.percentile(args[0], args[1])
+        if name == "iqr": return MATHVAG.iqr(args[0])
+
+        # =============================================
+        # VECTORES (MATHVAG)
+        # =============================================
+        if name == "dot_product": return MATHVAG.dot_product(args[0], args[1])
+        if name == "norm": return MATHVAG.norm(args[0])
+        if name == "cross_product": return MATHVAG.cross_product(args[0], args[1])
+        if name == "normalize_vector": return MATHVAG.normalize_vector(args[0])
+
+        # =============================================
+        # ML MATH (MATHVAG)
+        # =============================================
+        if name == "sigmoid": return MATHVAG.sigmoid(args[0])
+        if name == "softmax_list": return MATHVAG.softmax(args[0])
+        if name == "entropy": return MATHVAG.entropy(args[0])
+        if name == "kl_divergence": return MATHVAG.kl_divergence(args[0], args[1])
+        if name == "linspace": return MATHVAG.linspace(args[0], args[1], int(args[2]))
+
+        # =============================================
+        # MATRICES (MATRXVAG)
+        # =============================================
+        if name == "mat_zeros": return MATRXVAG.mat_zeros(int(args[0]), int(args[1]))
+        if name == "mat_ones": return MATRXVAG.mat_ones(int(args[0]), int(args[1]))
+        if name == "mat_identity": return MATRXVAG.mat_identity(int(args[0]))
+        if name == "mat_add": return MATRXVAG.mat_add(args[0], args[1])
+        if name == "mat_sub": return MATRXVAG.mat_sub(args[0], args[1])
+        if name == "mat_mul": return MATRXVAG.mat_mul(args[0], args[1])
+        if name == "mat_scalar": return MATRXVAG.mat_scalar(args[0], args[1])
+        if name == "mat_transpose": return MATRXVAG.mat_transpose(args[0])
+        if name == "mat_det": return MATRXVAG.mat_det(args[0])
+        if name == "mat_inverse": return MATRXVAG.mat_inverse(args[0])
+        if name == "mat_solve": return MATRXVAG.mat_solve(args[0], args[1])
+        if name == "mat_lu": return MATRXVAG.mat_lu(args[0])
+        if name == "mat_rank": return MATRXVAG.mat_rank(args[0])
+        if name == "mat_trace": return MATRXVAG.mat_trace(args[0])
+        if name == "mat_norm": return MATRXVAG.mat_norm(args[0])
+        if name == "mat_shape": return MATRXVAG.mat_shape(args[0])
+        if name == "mat_get": return MATRXVAG.mat_get(args[0], int(args[1]), int(args[2]))
+        if name == "mat_set": return MATRXVAG.mat_set(args[0], int(args[1]), int(args[2]), args[3])
+        if name == "mat_flatten": return MATRXVAG.mat_flatten(args[0])
+        if name == "mat_reshape": return MATRXVAG.mat_reshape(args[0], int(args[1]), int(args[2]))
+        if name == "mat_hadamard": return MATRXVAG.mat_hadamard(args[0], args[1])
+        if name == "mat_eigenvalues_2x2": return MATRXVAG.mat_eigenvalues_2x2(args[0])
+        if name == "mat_eigenvalue_dominant": return MATRXVAG.mat_eigenvalue_dominant(args[0])
+
+        # =============================================
+        # ARCHIVOS Y CSV
+        # =============================================
         if name == "file_write": return ARCHIVOSVAG.file_write(args[0], args[1])
         if name == "file_read": return ARCHIVOSVAG.file_read(args[0])
         if name == "file_append": return ARCHIVOSVAG.file_append(args[0], args[1])
@@ -206,7 +291,9 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "csv_read": return ARCHIVOSVAG.csv_read(args[0])
         if name == "csv_write": return ARCHIVOSVAG.csv_write(args[0], args[1])
 
-        # Listas y Texto
+        # =============================================
+        # LISTAS Y TEXTO
+        # =============================================
         if name == "len": return len(args[0])
         if name == "get": return args[0][args[1]]
         if name == "set": 
@@ -224,16 +311,83 @@ class VAGAXInterpreter(VagaxParserVisitor):
             return int(text)
         if name == "range": return list(range(int(args[0]), int(args[1])))
 
-        # Gráficas (Deben estar aquí antes del error de "no definida")
+        # =============================================
+        # GRÁFICAS (GRAFVAG)
+        # =============================================
         if name == "plot_pastel": return GRAFVAG.plot_pastel(args[0], args[1])
         if name == "plot_barras": return GRAFVAG.plot_barras(args[0], args[1])
         if name == "plot_lineal": return GRAFVAG.plot_lineal(args[0], args[1])
+        if name == "plot_scatter": return GRAFVAG.plot_scatter(args[0], args[1])
+        if name == "plot_heatmap": return GRAFVAG.plot_heatmap(args[0])
+        if name == "plot_histogram": return GRAFVAG.plot_histogram(args[0], int(args[1]) if len(args) > 1 else 10)
+        if name == "plot_loss": return GRAFVAG.plot_loss(args[0])
+        if name == "set_title": return GRAFVAG.set_title(args[0])
+        if name == "set_xlabel": return GRAFVAG.set_xlabel(args[0])
+        if name == "set_ylabel": return GRAFVAG.set_ylabel(args[0])
 
-        # Regresión y Machine Learning
+        # =============================================
+        # REGRESIÓN (REGREVAG)
+        # =============================================
         if name == "lin_reg_fit": return REGREVAG.lin_reg_fit(args[0], args[1])
         if name == "lin_reg_predict": return REGREVAG.lin_reg_predict(args[0], args[1])
+        if name == "lin_reg_r2": return REGREVAG.lin_reg_r2(args[0], args[1], args[2])
         if name == "log_reg_fit": return REGREVAG.log_reg_fit(args[0], args[1], args[2], args[3])
         if name == "log_reg_predict": return REGREVAG.log_reg_predict(args[0], args[1])
+        if name == "poly_reg_fit": return REGREVAG.poly_reg_fit(args[0], args[1], int(args[2]))
+        if name == "poly_reg_predict": return REGREVAG.poly_reg_predict(args[0], args[1])
+        if name == "multi_lin_reg_fit": return REGREVAG.multi_lin_reg_fit(args[0], args[1])
+        if name == "multi_lin_reg_predict": return REGREVAG.multi_lin_reg_predict(args[0], args[1])
+
+        # =============================================
+        # CLASIFICACIÓN (CLASIFVAG)
+        # =============================================
+        if name == "knn_classify": return CLASIFVAG.knn_classify(args[0], args[1], args[2], int(args[3]))
+        if name == "knn_predict": return CLASIFVAG.knn_predict(args[0], args[1], args[2], int(args[3]))
+        if name == "knn_accuracy": return CLASIFVAG.knn_accuracy(args[0], args[1], args[2], args[3], int(args[4]))
+        if name == "decision_tree_fit": return CLASIFVAG.decision_tree_fit(args[0], args[1], int(args[2]) if len(args) > 2 else 5)
+        if name == "decision_tree_predict": return CLASIFVAG.decision_tree_predict(args[0], args[1])
+        if name == "confusion_matrix": return CLASIFVAG.confusion_matrix(args[0], args[1])
+        if name == "accuracy_score": return CLASIFVAG.accuracy(args[0], args[1])
+        if name == "precision_score": return CLASIFVAG.precision(args[0], args[1])
+        if name == "recall_score": return CLASIFVAG.recall(args[0], args[1])
+        if name == "f1": return CLASIFVAG.f1_score(args[0], args[1])
+        if name == "classification_report": return CLASIFVAG.classification_report(args[0], args[1])
+
+        # =============================================
+        # DATASETS (DATASETVAG)
+        # =============================================
+        if name == "csv_to_tensor": return DATASETVAG.csv_to_tensor(args[0])
+        if name == "normalize_data": return DATASETVAG.normalize(args[0])
+        if name == "standardize_data": return DATASETVAG.standardize(args[0])
+        if name == "train_test_split": return DATASETVAG.train_test_split(args[0], args[1], args[2] if len(args) > 2 else 0.8)
+        if name == "one_hot_encode": return DATASETVAG.one_hot_encode(args[0], int(args[1]))
+        if name == "shuffle_data": return DATASETVAG.shuffle_data(args[0], args[1])
+        if name == "describe_data": return DATASETVAG.describe(args[0])
+        if name == "head_data": return DATASETVAG.head(args[0], int(args[1]) if len(args) > 1 else 5)
+        if name == "split_xy": return DATASETVAG.split_xy(args[0], int(args[1]) if len(args) > 1 else -1)
+
+        # =============================================
+        # TENSORES (Tensor)
+        # =============================================
+        if name == "tensor": return Tensor(args[0])
+        if name == "tensor_zeros": return Tensor.zeros(int(args[0]), int(args[1]))
+        if name == "tensor_ones": return Tensor.ones(int(args[0]), int(args[1]))
+        if name == "tensor_random": return Tensor.random(int(args[0]), int(args[1]))
+        if name == "tensor_identity": return Tensor.identity(int(args[0]))
+
+        # =============================================
+        # LEARNVAGAX (API de alto nivel)
+        # =============================================
+        if name == "quick_regress": return LEARNVAGAX.quick_regress(args[0], args[1], int(args[2]) if len(args) > 2 else 1)
+        if name == "load_csv": return LEARNVAGAX.load_csv(args[0], int(args[1]) if len(args) > 1 else -1)
+
+        # =============================================
+        # VAGML WRAPPERS (Entrenamiento completo)
+        # =============================================
+        if name == "run_xor": return LEARNVAGAX.run_xor(int(args[0]), args[1])
+        if name == "run_classify_nn": return LEARNVAGAX.run_classify_nn(args[0], args[1], int(args[2]), args[3])
+        if name == "run_loss_trace": return LEARNVAGAX.run_loss_trace(int(args[0]), args[1])
+        if name == "kmeans": return CLASIFVAG.kmeans(args[0], int(args[1]), int(args[2]) if len(args) > 2 else 100)
 
         # 3. LÓGICA PARA FUNCIONES DEL USUARIO (Solo si no es una nativa)
         if name not in self.functions:
