@@ -1,0 +1,121 @@
+// =============================================
+// TEST REGRESION ML - Valida: PREDICCION
+// =============================================
+// Regresion lineal, polinomial y logistica
+// para validar que los modelos predicen correctamente.
+
+"===================================";
+"  TEST REGRESION - PREDICCION";
+"===================================";
+
+// === REGRESION LINEAL ===
+"";
+"--- REGRESION LINEAL ---";
+"Datos: y = 2x + 1";
+
+listvag x_lin = range(0, 0);
+append(x_lin, 1);
+append(x_lin, 2);
+append(x_lin, 3);
+append(x_lin, 4);
+append(x_lin, 5);
+
+listvag y_lin = range(0, 0);
+append(y_lin, 3);
+append(y_lin, 5);
+append(y_lin, 7);
+append(y_lin, 9);
+append(y_lin, 11);
+
+listvag modelo_lin = lin_reg_fit(x_lin, y_lin);
+"Modelo [m, b]:";
+modelo_lin;
+
+floatvag pred6 = lin_reg_predict(modelo_lin, 6);
+"Prediccion para x=6 (esperado 13):";
+pred6;
+
+floatvag r2_lin = lin_reg_r2(x_lin, y_lin, modelo_lin);
+"R2 Score (esperado 1.0):";
+r2_lin;
+
+ifvag (pred6 > 12.5 && pred6 < 13.5) {
+    "PASS: Regresion lineal predice correctamente";
+} elsevag {
+    "FAIL: Prediccion incorrecta";
+} endvag
+
+// === REGRESION POLINOMIAL ===
+"";
+"--- REGRESION POLINOMIAL ---";
+"Datos: y = x^2";
+
+listvag x_poly = range(0, 0);
+append(x_poly, 1);
+append(x_poly, 2);
+append(x_poly, 3);
+append(x_poly, 4);
+append(x_poly, 5);
+
+listvag y_poly = range(0, 0);
+append(y_poly, 1);
+append(y_poly, 4);
+append(y_poly, 9);
+append(y_poly, 16);
+append(y_poly, 25);
+
+listvag modelo_poly = poly_reg_fit(x_poly, y_poly, 2);
+"Modelo polinomial grado 2:";
+modelo_poly;
+
+floatvag pred_poly = poly_reg_predict(modelo_poly, 6);
+"Prediccion para x=6 (esperado 36):";
+pred_poly;
+
+ifvag (pred_poly > 35 && pred_poly < 37) {
+    "PASS: Regresion polinomial predice correctamente";
+} elsevag {
+    "FAIL: Prediccion polinomial incorrecta";
+} endvag
+
+// === REGRESION LOGISTICA ===
+"";
+"--- REGRESION LOGISTICA ---";
+"Clasificacion binaria: valores bajos=0, altos=1";
+
+listvag x_log = range(0, 0);
+append(x_log, 1);
+append(x_log, 2);
+append(x_log, 3);
+append(x_log, 8);
+append(x_log, 9);
+append(x_log, 10);
+
+listvag y_log = range(0, 0);
+append(y_log, 0);
+append(y_log, 0);
+append(y_log, 0);
+append(y_log, 1);
+append(y_log, 1);
+append(y_log, 1);
+
+listvag modelo_log = log_reg_fit(x_log, y_log, 0.1, 1000);
+
+floatvag p_bajo = log_reg_predict(modelo_log, 2);
+floatvag p_alto = log_reg_predict(modelo_log, 9);
+
+"Prob para x=2 (esperado ~0):";
+p_bajo;
+"Prob para x=9 (esperado ~1):";
+p_alto;
+
+ifvag (p_bajo < 0.3 && p_alto > 0.7) {
+    "PASS: Regresion logistica clasifica correctamente";
+} elsevag {
+    "FAIL: Clasificacion logistica incorrecta";
+} endvag
+
+"";
+"===================================";
+"  FIN TEST REGRESION";
+"===================================";

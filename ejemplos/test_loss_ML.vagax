@@ -1,0 +1,102 @@
+// =============================================
+// TEST LOSS ML - Valida: APRENDIZAJE REAL
+// =============================================
+// Verifica que el loss DECRECE durante el entrenamiento.
+// Si el loss baja, la red esta aprendiendo.
+
+"===================================";
+"  TEST LOSS - APRENDIZAJE REAL";
+"===================================";
+"";
+"Entrenando red neuronal XOR (200 epochs)...";
+"Capturando loss por epoca...";
+"";
+
+listvag losses = run_loss_trace(200, 0.1);
+
+intvag total_epocas = len(losses);
+"Total epocas:";
+total_epocas;
+
+// === LOSS INICIAL VS FINAL ===
+floatvag loss_inicial = get(losses, 0);
+floatvag loss_final = get(losses, 199);
+
+"";
+"Loss en epoca 0:";
+loss_inicial;
+
+"Loss en epoca 199:";
+loss_final;
+
+"";
+"=== VALIDACION 1: Loss decrece ===";
+
+ifvag (loss_final < loss_inicial) {
+    "PASS: Loss final < Loss inicial";
+    "La red esta aprendiendo";
+} elsevag {
+    "FAIL: Loss no decrece";
+} endvag
+
+// === VALIDACION 2: Tendencia decreciente ===
+// Comparar promedio primera mitad vs segunda mitad
+"";
+"=== VALIDACION 2: Tendencia decreciente ===";
+
+floatvag sum_first = 0;
+intvag i = 0;
+forvag (i = 0; i < 100; i = i + 1) {
+    sum_first = sum_first + get(losses, i);
+} endvag
+
+floatvag sum_second = 0;
+intvag j = 100;
+forvag (j = 100; j < 200; j = j + 1) {
+    sum_second = sum_second + get(losses, j);
+} endvag
+
+floatvag avg_first = sum_first / 100;
+floatvag avg_second = sum_second / 100;
+
+"Promedio loss primeras 100 epocas:";
+avg_first;
+
+"Promedio loss ultimas 100 epocas:";
+avg_second;
+
+ifvag (avg_second < avg_first) {
+    "PASS: Tendencia decreciente confirmada";
+} elsevag {
+    "FAIL: No hay tendencia decreciente";
+} endvag
+
+// === VALIDACION 3: Reduccion significativa ===
+"";
+"=== VALIDACION 3: Reduccion significativa ===";
+
+floatvag diff = loss_inicial - loss_final;
+floatvag reduccion = diff / loss_inicial;
+reduccion = reduccion * 100;
+"Reduccion porcentual del loss:";
+reduccion;
+
+ifvag (reduccion > 50) {
+    "PASS: Reduccion > 50% - Aprendizaje real confirmado";
+} elsevag {
+    "WARN: Reduccion < 50% - Aprendizaje parcial";
+} endvag
+
+// === MUESTREO CADA 50 EPOCAS ===
+"";
+"=== MUESTREO DE LOSS ===";
+"Epoca 0   ->"; get(losses, 0);
+"Epoca 49  ->"; get(losses, 49);
+"Epoca 99  ->"; get(losses, 99);
+"Epoca 149 ->"; get(losses, 149);
+"Epoca 199 ->"; get(losses, 199);
+
+"";
+"===================================";
+"  FIN TEST LOSS";
+"===================================";

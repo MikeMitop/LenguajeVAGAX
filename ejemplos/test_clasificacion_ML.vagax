@@ -1,0 +1,137 @@
+// =============================================
+// TEST CLASIFICACION ML - Valida: RNA SUPERVISADA
+// =============================================
+// KNN, Arbol de decision, y red neuronal
+// para clasificacion supervisada.
+
+"===================================";
+"  TEST CLASIFICACION - RNA SUPERVISADA";
+"===================================";
+
+// === DATOS DE ENTRENAMIENTO ===
+// Dos clusters separados: clase 0 (valores bajos) y clase 1 (valores altos)
+
+listvag X_train = range(0, 0);
+append(X_train, range(0, 0));
+append(X_train, range(0, 0));
+append(X_train, range(0, 0));
+append(X_train, range(0, 0));
+append(X_train, range(0, 0));
+append(X_train, range(0, 0));
+
+// Llenar features manualmente
+// Clase 0: puntos cercanos al origen
+set(X_train, 0, range(0, 0)); append(get(X_train, 0), 1); append(get(X_train, 0), 1);
+set(X_train, 1, range(0, 0)); append(get(X_train, 1), 2); append(get(X_train, 1), 1);
+set(X_train, 2, range(0, 0)); append(get(X_train, 2), 1); append(get(X_train, 2), 2);
+
+// Clase 1: puntos lejanos
+set(X_train, 3, range(0, 0)); append(get(X_train, 3), 8); append(get(X_train, 3), 8);
+set(X_train, 4, range(0, 0)); append(get(X_train, 4), 9); append(get(X_train, 4), 9);
+set(X_train, 5, range(0, 0)); append(get(X_train, 5), 8); append(get(X_train, 5), 9);
+
+listvag y_train = range(0, 0);
+append(y_train, 0);
+append(y_train, 0);
+append(y_train, 0);
+append(y_train, 1);
+append(y_train, 1);
+append(y_train, 1);
+
+// === KNN ===
+"";
+"--- KNN (K=3) ---";
+
+listvag test1 = range(0, 0);
+append(test1, 2);
+append(test1, 2);
+
+listvag test2 = range(0, 0);
+append(test2, 9);
+append(test2, 8);
+
+intvag knn_pred1 = knn_classify(X_train, y_train, test1, 3);
+intvag knn_pred2 = knn_classify(X_train, y_train, test2, 3);
+
+"Punto [2,2] -> (esperado 0):";
+knn_pred1;
+
+"Punto [9,8] -> (esperado 1):";
+knn_pred2;
+
+ifvag (knn_pred1 == 0 && knn_pred2 == 1) {
+    "PASS: KNN clasifica correctamente";
+} elsevag {
+    "FAIL: KNN clasificacion incorrecta";
+} endvag
+
+// === ARBOL DE DECISION ===
+"";
+"--- ARBOL DE DECISION ---";
+
+listvag tree = decision_tree_fit(X_train, y_train, 3);
+
+intvag tree_pred1 = decision_tree_predict(tree, test1);
+intvag tree_pred2 = decision_tree_predict(tree, test2);
+
+"Punto [2,2] -> (esperado 0):";
+tree_pred1;
+
+"Punto [9,8] -> (esperado 1):";
+tree_pred2;
+
+ifvag (tree_pred1 == 0 && tree_pred2 == 1) {
+    "PASS: Arbol de decision clasifica correctamente";
+} elsevag {
+    "FAIL: Arbol clasificacion incorrecta";
+} endvag
+
+// === RED NEURONAL (CLASIFICACION BINARIA) ===
+"";
+"--- RED NEURONAL CLASIFICADORA ---";
+"Entrenando RNA supervisada (500 epochs)...";
+
+// Datos como listas de listas para run_classify_nn
+listvag X_nn = range(0, 0);
+append(X_nn, range(0, 0)); append(get(X_nn, 0), 1); append(get(X_nn, 0), 1);
+append(X_nn, range(0, 0)); append(get(X_nn, 1), 2); append(get(X_nn, 1), 1);
+append(X_nn, range(0, 0)); append(get(X_nn, 2), 1); append(get(X_nn, 2), 2);
+append(X_nn, range(0, 0)); append(get(X_nn, 3), 8); append(get(X_nn, 3), 8);
+append(X_nn, range(0, 0)); append(get(X_nn, 4), 9); append(get(X_nn, 4), 9);
+append(X_nn, range(0, 0)); append(get(X_nn, 5), 8); append(get(X_nn, 5), 9);
+
+listvag y_nn = range(0, 0);
+append(y_nn, range(0, 0)); append(get(y_nn, 0), 0);
+append(y_nn, range(0, 0)); append(get(y_nn, 1), 0);
+append(y_nn, range(0, 0)); append(get(y_nn, 2), 0);
+append(y_nn, range(0, 0)); append(get(y_nn, 3), 1);
+append(y_nn, range(0, 0)); append(get(y_nn, 4), 1);
+append(y_nn, range(0, 0)); append(get(y_nn, 5), 1);
+
+listvag nn_preds = run_classify_nn(X_nn, y_nn, 500, 0.05);
+
+"";
+"Predicciones RNA:";
+"[1,1] ->"; get(nn_preds, 0);
+"[2,1] ->"; get(nn_preds, 1);
+"[1,2] ->"; get(nn_preds, 2);
+"[8,8] ->"; get(nn_preds, 3);
+"[9,9] ->"; get(nn_preds, 4);
+"[8,9] ->"; get(nn_preds, 5);
+
+// Verificar que clase 0 tiene pred < 0.5 y clase 1 tiene pred > 0.5
+intvag nn_ok = 0;
+ifvag (get(nn_preds, 0) < 0.5 && get(nn_preds, 3) > 0.5) {
+    nn_ok = 1;
+} endvag
+
+ifvag (nn_ok == 1) {
+    "PASS: RNA supervisada clasifica correctamente";
+} elsevag {
+    "WARN: RNA necesita ajuste de hiperparametros";
+} endvag
+
+"";
+"===================================";
+"  FIN TEST CLASIFICACION";
+"===================================";

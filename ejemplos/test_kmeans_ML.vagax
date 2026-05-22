@@ -1,0 +1,104 @@
+// =============================================
+// TEST KMEANS ML - Valida: AGRUPAMIENTO
+// =============================================
+// K-Means debe agrupar puntos en clusters
+// sin etiquetas supervisadas (aprendizaje no supervisado).
+
+"===================================";
+"  TEST KMEANS - AGRUPAMIENTO";
+"===================================";
+
+// === DATOS: 3 clusters claros ===
+// Cluster A: cerca de (1,1)
+// Cluster B: cerca de (10,10)
+// Cluster C: cerca de (1,10)
+
+listvag datos = range(0, 0);
+
+// Cluster A (esperado label 0)
+append(datos, range(0, 0)); append(get(datos, 0), 1); append(get(datos, 0), 1);
+append(datos, range(0, 0)); append(get(datos, 1), 2); append(get(datos, 1), 1);
+append(datos, range(0, 0)); append(get(datos, 2), 1); append(get(datos, 2), 2);
+append(datos, range(0, 0)); append(get(datos, 3), 2); append(get(datos, 3), 2);
+
+// Cluster B (esperado label 1)
+append(datos, range(0, 0)); append(get(datos, 4), 10); append(get(datos, 4), 10);
+append(datos, range(0, 0)); append(get(datos, 5), 11); append(get(datos, 5), 10);
+append(datos, range(0, 0)); append(get(datos, 6), 10); append(get(datos, 6), 11);
+append(datos, range(0, 0)); append(get(datos, 7), 11); append(get(datos, 7), 11);
+
+// Cluster C (esperado label 2)
+append(datos, range(0, 0)); append(get(datos, 8), 1); append(get(datos, 8), 10);
+append(datos, range(0, 0)); append(get(datos, 9), 2); append(get(datos, 9), 10);
+append(datos, range(0, 0)); append(get(datos, 10), 1); append(get(datos, 10), 11);
+append(datos, range(0, 0)); append(get(datos, 11), 2); append(get(datos, 11), 11);
+
+"Ejecutando K-Means con K=3...";
+"";
+
+listvag resultado = kmeans(datos, 3);
+listvag labels = get(resultado, 0);
+listvag centroids = get(resultado, 1);
+
+"Labels asignados:";
+labels;
+
+"";
+"Centroids finales:";
+centroids;
+
+// === VALIDACION ===
+// Los puntos del mismo cluster deben tener el mismo label
+"";
+"=== VALIDACION ===";
+
+// Cluster A: indices 0-3 deben tener el mismo label
+intvag label_a = get(labels, 0);
+intvag cluster_a_ok = 1;
+ifvag (get(labels, 1) != label_a) { cluster_a_ok = 0; } endvag
+ifvag (get(labels, 2) != label_a) { cluster_a_ok = 0; } endvag
+ifvag (get(labels, 3) != label_a) { cluster_a_ok = 0; } endvag
+
+ifvag (cluster_a_ok == 1) {
+    "PASS: Cluster A agrupado correctamente";
+} elsevag {
+    "FAIL: Cluster A no agrupado";
+} endvag
+
+// Cluster B: indices 4-7
+intvag label_b = get(labels, 4);
+intvag cluster_b_ok = 1;
+ifvag (get(labels, 5) != label_b) { cluster_b_ok = 0; } endvag
+ifvag (get(labels, 6) != label_b) { cluster_b_ok = 0; } endvag
+ifvag (get(labels, 7) != label_b) { cluster_b_ok = 0; } endvag
+
+ifvag (cluster_b_ok == 1) {
+    "PASS: Cluster B agrupado correctamente";
+} elsevag {
+    "FAIL: Cluster B no agrupado";
+} endvag
+
+// Cluster C: indices 8-11
+intvag label_c = get(labels, 8);
+intvag cluster_c_ok = 1;
+ifvag (get(labels, 9) != label_c) { cluster_c_ok = 0; } endvag
+ifvag (get(labels, 10) != label_c) { cluster_c_ok = 0; } endvag
+ifvag (get(labels, 11) != label_c) { cluster_c_ok = 0; } endvag
+
+ifvag (cluster_c_ok == 1) {
+    "PASS: Cluster C agrupado correctamente";
+} elsevag {
+    "FAIL: Cluster C no agrupado";
+} endvag
+
+// Clusters deben ser diferentes entre si
+ifvag (label_a != label_b && label_b != label_c && label_a != label_c) {
+    "PASS: Los 3 clusters son distintos";
+} elsevag {
+    "FAIL: Clusters no son distintos";
+} endvag
+
+"";
+"===================================";
+"  FIN TEST KMEANS";
+"===================================";

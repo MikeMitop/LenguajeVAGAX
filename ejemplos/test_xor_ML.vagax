@@ -1,0 +1,62 @@
+// =============================================
+// TEST XOR ML - Valida: BACKPROPAGATION
+// =============================================
+// La compuerta XOR no es linealmente separable.
+// Solo una red neuronal con backpropagation puede aprenderla.
+
+"===================================";
+"  TEST XOR - BACKPROPAGATION";
+"===================================";
+
+"Entrenando red neuronal en XOR (1000 epochs, lr=0.1)...";
+"";
+
+listvag resultados = run_xor(1000, 0.1);
+
+"";
+"=== RESULTADOS ===";
+"Loss final:";
+get(resultados, 0);
+
+"";
+"Predicciones de la red neuronal:";
+
+"[0,0] -> (esperado ~0):";
+get(resultados, 1);
+
+"[0,1] -> (esperado ~1):";
+get(resultados, 2);
+
+"[1,0] -> (esperado ~1):";
+get(resultados, 3);
+
+"[1,1] -> (esperado ~0):";
+get(resultados, 4);
+
+"";
+"=== VALIDACION ===";
+
+floatvag loss = get(resultados, 0);
+
+ifvag (loss < 0.05) {
+    "PASS: Loss < 0.05 - Backpropagation funciona correctamente";
+} elsevag {
+    "WARN: Loss >= 0.05 - La red necesita mas entrenamiento";
+} endvag
+
+floatvag pred01 = get(resultados, 2);
+floatvag pred10 = get(resultados, 3);
+floatvag pred00 = get(resultados, 1);
+floatvag pred11 = get(resultados, 4);
+
+ifvag (pred01 > 0.5 && pred10 > 0.5 && pred00 < 0.5 && pred11 < 0.5) {
+    "PASS: Todas las predicciones son correctas";
+    "La red aprendio la funcion XOR via backpropagation";
+} elsevag {
+    "FAIL: Alguna prediccion es incorrecta";
+} endvag
+
+"";
+"===================================";
+"  FIN TEST XOR";
+"===================================";
