@@ -11,6 +11,9 @@ from librerias.DATASETVAG import DATASETVAG
 from librerias.MATRXVAG import MATRXVAG
 from librerias.LEARNVAGAX import LEARNVAGAX
 from librerias.VAGML.Tensor import Tensor
+from librerias.VAGML.dataframe import leer_csv, div_entreno
+from librerias.IMAGENVAG import IMAGENVAG
+from runtime.mostrar import builtin_mostrar
 
 
 class ReturnSignal(Exception):
@@ -365,6 +368,7 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "describe_data": return DATASETVAG.describe(args[0])
         if name == "head_data": return DATASETVAG.head(args[0], int(args[1]) if len(args) > 1 else 5)
         if name == "split_xy": return DATASETVAG.split_xy(args[0], int(args[1]) if len(args) > 1 else -1)
+        if name == "csv_test_to_data": return DATASETVAG.csv_test_to_data(args[0])
 
         # =============================================
         # TENSORES (Tensor)
@@ -387,7 +391,36 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "run_xor": return LEARNVAGAX.run_xor(int(args[0]), args[1])
         if name == "run_classify_nn": return LEARNVAGAX.run_classify_nn(args[0], args[1], int(args[2]), args[3])
         if name == "run_loss_trace": return LEARNVAGAX.run_loss_trace(int(args[0]), args[1])
+        if name == "run_classify_and_predict": return LEARNVAGAX.run_classify_and_predict(args[0], args[1], args[2], args[3], int(args[4]), args[5])
         if name == "kmeans": return CLASIFVAG.kmeans(args[0], int(args[1]), int(args[2]) if len(args) > 2 else 100)
+
+        # =============================================
+        # PRUEBAFRAME (Dataframes)
+        # =============================================
+        if name == "mostrar": return builtin_mostrar(*args)
+        if name == "leer_csv": return leer_csv(args[0])
+        if name == "df_columnas": return args[0].columnas()
+        if name == "df_seleccionar": return args[0].seleccionar(args[1])
+        if name == "df_filtrar": return args[0].filtrar(args[1])
+        if name == "df_reemplazar": return args[0].reemplazar(args[1], args[2], args[3])
+        if name == "df_llenar_na": return args[0].llenar_na(args[1], args[2])
+        if name == "df_detectar_tipos": return args[0].detectar_tipos()
+        if name == "df_to_matriz": return args[0].to_matriz(args[1])
+        if name == "df_to_etiqueta": return args[0].to_etiqueta(args[1])
+        if name == "df_guardar_csv": return args[0].guardar_csv(args[1])
+        if name == "div_entreno": return div_entreno(args[0], args[1], args[2])
+
+        # =============================================
+        # IMAGENVAG (Procesamiento de imágenes)
+        # =============================================
+        if name == "imagen_leer_gris": return IMAGENVAG.leer_imagen_gris(args[0], int(args[1]) if len(args) > 1 else 16, int(args[2]) if len(args) > 2 else 16)
+        if name == "imagen_dir_a_csv": return IMAGENVAG.directorio_a_csv(args[0], args[1], args[2], int(args[3]) if len(args) > 3 else 16, int(args[4]) if len(args) > 4 else 16, int(args[5]) if len(args) > 5 else None)
+        if name == "imagen_test_a_csv": return IMAGENVAG.directorio_test_a_csv(args[0], args[1], args[2], int(args[3]) if len(args) > 3 else 16, int(args[4]) if len(args) > 4 else 16, int(args[5]) if len(args) > 5 else None)
+
+        # =============================================
+        # run_classify_nn_full (versión con logging detallado)
+        # =============================================
+        if name == "run_classify_nn_full": return LEARNVAGAX.run_classify_nn(args[0], args[1], int(args[2]), args[3])
 
         # 3. LÓGICA PARA FUNCIONES DEL USUARIO (Solo si no es una nativa)
         if name not in self.functions:
