@@ -139,30 +139,101 @@ class LEARNVAGAX:
 
     @staticmethod
     def run_classify_nn(X_data, y_data, epochs, lr):
-        """Entrena clasificador binario. Retorna lista de predicciones."""
+        """
+        Entrena clasificador binario MLP. Retorna lista de predicciones.
+        Acepta Tensores o listas de listas como entrada.
+        La arquitectura se adapta al número de features de entrada.
+        """
         Tensor.set_seed(42)
-        X = Tensor(X_data)
-        y = Tensor(y_data)
+
+        # ── Normalizar entradas (Tensor o lista de listas) ──────────────
+        if isinstance(X_data, Tensor):
+            X = X_data
+        else:
+            X = Tensor(X_data)
+
+        if isinstance(y_data, Tensor):
+            y = y_data
+        else:
+            y = Tensor(y_data)
+
+        # ── Arquitectura adaptativa ──────────────────────────────────────
+        n_features = X.shape[1]
+
+        # Para muchos features usamos capas más grandes
+        if n_features <= 10:
+            h1, h2 = 16, 0
+        elif n_features <= 50:
+            h1, h2 = 32, 0
+        elif n_features <= 200:
+            h1, h2 = 64, 32
+        else:
+            # 400+ features (imágenes aplanadas)
+            h1, h2 = 64, 32
+
         model = MLP()
-        model.add(Dense(X.shape[1], 16))
+        model.add(Dense(n_features, h1))
         model.add(ReLU())
-        model.add(Dense(16, 1))
+
+        if h2 > 0:
+            model.add(Dense(h1, h2))
+            model.add(ReLU())
+            model.add(Dense(h2, 1))
+        else:
+            model.add(Dense(h1, 1))
+
         model.add(Sigmoid())
-        opt = SGD(model.parameters(), lr=lr)
-        crit = MSE()
-        loader = DataLoader(X, y, batch_size=X.shape[0], shuffle=False)
+
+        # ── Optimizer y loss ──────────────────────────────────────────────
+        if lr > 0:
+            opt = Adam(model.parameters(), lr=lr)
+        else:
+            opt = SGD(model.parameters(), lr=0.01)
+
+        crit = BCE()
+
+        # ── Tamaño de batch adaptativo ────────────────────────────────────
+        n_samples = X.shape[0]
+        batch_size = min(64, n_samples)
+
+        loader = DataLoader(X, y, batch_size=batch_size, shuffle=True)
+
+        # ── Entrenamiento ─────────────────────────────────────────────────
+        if epochs <= 0:
+            # Solo predicción sin entrenamiento
+            fp = model.forward(X)
+            res = []
+            for i in range(fp.shape[0]):
+                res.append(fp.data[i][0])
+            return res
+
+        log_every = max(1, epochs // 5)
+
         for ep in range(epochs):
+            total_loss = 0.0
             for bx, by in loader:
                 p = model.forward(bx)
                 l = crit.forward(p, by)
+                total_loss += l.item()
                 g = crit.backward(p, by)
                 model.backward(g)
                 opt.step()
                 opt.zero_grad()
-            if ep % (epochs // 5) == 0:
+
+            if ep % log_every == 0:
                 pf = model.forward(X)
-                lv = crit.forward(pf, y).item()
-                print("  Epoch " + str(ep) + ": Loss = " + str(round(lv, 6)))
+                # Calcular accuracy rápida
+                correctos = 0
+                for i in range(pf.shape[0]):
+                    pred_bin = 1 if pf.data[i][0] >= 0.5 else 0
+                    real_bin = 1 if y.data[i][0] >= 0.5 else 0
+                    if pred_bin == real_bin:
+                        correctos += 1
+                acc = correctos / n_samples
+                print("  Epoch " + str(ep) + "/" + str(epochs) +
+                      " | Loss: " + str(round(total_loss, 6)) +
+                      " | Acc: " + str(round(acc * 100, 2)) + "%")
+
         fp = model.forward(X)
         res = []
         for i in range(fp.shape[0]):
@@ -196,3 +267,106 @@ class LEARNVAGAX:
                 opt.zero_grad()
             losses.append(tl)
         return losses
+
+    @staticmethod
+    def run_classify_and_predict(X_train_data, y_train_data, X_test_data, y_test_data, epochs, lr):
+        """
+        Entrena con (X_train, y_train) y predice sobre X_test.
+        Retorna [preds_test, acc_train, acc_test].
+        Acepta Tensores o listas de listas.
+        """
+        Tensor.set_seed(42)
+
+        # ── Convertir entradas ─────────────────────────────────────────
+        X_train = X_train_data if isinstance(X_train_data, Tensor) else Tensor(X_train_data)
+        y_train = y_train_data if isinstance(y_train_data, Tensor) else Tensor(y_train_data)
+        X_test  = X_test_data  if isinstance(X_test_data,  Tensor) else Tensor(X_test_data)
+        y_test  = y_test_data  if isinstance(y_test_data,  Tensor) else Tensor(y_test_data)
+
+        # ── Arquitectura adaptativa ────────────────────────────────────
+        n_features = X_train.shape[1]
+        if n_features <= 10:
+            h1, h2 = 16, 0
+        elif n_features <= 50:
+            h1, h2 = 32, 0
+        else:
+            h1, h2 = 64, 32
+
+        model = MLP()
+        model.add(Dense(n_features, h1))
+        model.add(ReLU())
+        if h2 > 0:
+            model.add(Dense(h1, h2))
+            model.add(ReLU())
+            model.add(Dense(h2, 1))
+        else:
+            model.add(Dense(h1, 1))
+        model.add(Sigmoid())
+
+        # ── Optimizer y loss ───────────────────────────────────────────
+        opt  = Adam(model.parameters(), lr=lr if lr > 0 else 0.001)
+        crit = BCE()
+
+        n_samples  = X_train.shape[0]
+        batch_size = min(64, n_samples)
+        loader = DataLoader(X_train, y_train, batch_size=batch_size, shuffle=True)
+
+        log_every = max(1, epochs // 5)
+
+        # ── Entrenamiento ──────────────────────────────────────────────
+        for ep in range(epochs):
+            total_loss = 0.0
+            for bx, by in loader:
+                p = model.forward(bx)
+                l = crit.forward(p, by)
+                total_loss += l.item()
+                g = crit.backward(p, by)
+                model.backward(g)
+                opt.step()
+                opt.zero_grad()
+
+            if ep % log_every == 0:
+                pf = model.forward(X_train)
+                correctos = 0
+                for i in range(pf.shape[0]):
+                    pred_bin = 1 if pf.data[i][0] >= 0.5 else 0
+                    real_bin = 1 if y_train.data[i][0] >= 0.5 else 0
+                    if pred_bin == real_bin:
+                        correctos += 1
+                acc = correctos / n_samples
+                print("  Epoch " + str(ep) + "/" + str(epochs) +
+                      " | Loss: " + str(round(total_loss, 6)) +
+                      " | Acc Train: " + str(round(acc * 100, 2)) + "%")
+
+        # ── Predicción sobre train ─────────────────────────────────────
+        fp_train = model.forward(X_train)
+        correctos_train = 0
+        for i in range(fp_train.shape[0]):
+            pred_bin = 1 if fp_train.data[i][0] >= 0.5 else 0
+            real_bin = 1 if y_train.data[i][0] >= 0.5 else 0
+            if pred_bin == real_bin:
+                correctos_train += 1
+        acc_train = correctos_train / X_train.shape[0]
+
+        # ── Predicción sobre test ──────────────────────────────────────
+        model.eval_mode()
+        fp_test = model.forward(X_test)
+        preds_test = []
+        correctos_test = 0
+        n_test = X_test.shape[0]
+        for i in range(n_test):
+            prob = fp_test.data[i][0]
+            preds_test.append(prob)
+            pred_bin = 1 if prob >= 0.5 else 0
+            real_bin = 1 if y_test.data[i][0] >= 0.5 else 0
+            if pred_bin == real_bin:
+                correctos_test += 1
+        acc_test = correctos_test / n_test if n_test > 0 else 0
+
+        print("\n  === RESULTADOS FINALES ===")
+        print("  Accuracy Train: " + str(round(acc_train * 100, 2)) + "%")
+        print("  Accuracy Test:  " + str(round(acc_test  * 100, 2)) + "%")
+
+        # Retorna [preds_test_lista, acc_train, acc_test]
+        return [preds_test, acc_train, acc_test]
+

@@ -46,6 +46,54 @@ class DATASETVAG:
         return data, header
 
     @staticmethod
+    def csv_test_to_data(path):
+        """
+        Lee CSV de test con formato: filename, p0, p1, ..., pN, label
+        Retorna [Tensor_X, Tensor_y, lista_filenames]
+        Primera columna = filename (string), última = label (int).
+        """
+        lines = ARCHIVOSVAG.file_lines(path)
+        if len(lines) == 0:
+            return [Tensor([[]]), Tensor([[]]), []]
+
+        # Saltar header
+        lines = lines[1:]
+
+        X_data = []
+        y_data = []
+        filenames = []
+
+        for line in lines:
+            if not line.strip():
+                continue
+            parts = line.split(",")
+            if len(parts) < 3:
+                continue
+
+            # Columna 0 = filename
+            fname = parts[0].strip()
+            filenames.append(fname)
+
+            # Columna 1 a N-1 = features
+            row = []
+            for p in parts[1:-1]:
+                p = p.strip()
+                try:
+                    row.append(float(p))
+                except:
+                    row.append(0.0)
+            X_data.append(row)
+
+            # Última columna = label
+            try:
+                label = float(parts[-1].strip())
+            except:
+                label = 0.0
+            y_data.append([label])
+
+        return [Tensor(X_data), Tensor(y_data), filenames]
+
+    @staticmethod
     def normalize(tensor):
         """Normalización min-max: (x - min) / (max - min) por columna"""
         filas, cols = tensor.shape
