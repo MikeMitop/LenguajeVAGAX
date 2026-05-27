@@ -787,3 +787,138 @@ class MATHVAG:
     @staticmethod
     def pi_val():
         return MATHVAG.PI
+
+
+
+class VAGRandom:
+
+    _seed = 123456789
+
+    # =====================================================
+    # CONTROL DE SEMILLA
+    # =====================================================
+
+    @staticmethod
+    def set_seed(seed):
+        """
+        Establece la semilla global.
+        """
+
+        if not isinstance(seed, int):
+            raise ValueError(
+                "La semilla debe ser un entero"
+            )
+
+        VAGRandom._seed = seed
+
+    @staticmethod
+    def get_seed():
+        """
+        Retorna la semilla actual.
+        """
+
+        return VAGRandom._seed
+
+    # =====================================================
+    # GENERADOR LCG
+    # =====================================================
+
+    @staticmethod
+    def _next():
+
+        a = 1664525
+        c = 1013904223
+        m = 2**32
+
+        VAGRandom._seed = (
+            a * VAGRandom._seed + c
+        ) % m
+
+        return VAGRandom._seed
+
+    # =====================================================
+    # ENTEROS ALEATORIOS
+    # =====================================================
+
+    @staticmethod
+    def randint(minimo, maximo):
+
+        if minimo > maximo:
+            raise ValueError(
+                "minimo no puede ser mayor que maximo"
+            )
+
+        rango = maximo - minimo + 1
+
+        return minimo + (
+            VAGRandom._next() % rango
+        )
+
+    # =====================================================
+    # FLOAT ALEATORIO [0,1]
+    # =====================================================
+
+    @staticmethod
+    def random():
+
+        return VAGRandom._next() / (2**32)
+
+    # =====================================================
+    # FLOAT EN RANGO
+    # =====================================================
+
+    @staticmethod
+    def uniform(minimo, maximo):
+
+        if minimo > maximo:
+            raise ValueError(
+                "minimo no puede ser mayor que maximo"
+            )
+
+        r = VAGRandom.random()
+
+        return minimo + (
+            (maximo - minimo) * r
+        )
+
+    # =====================================================
+    # SELECCIÓN ALEATORIA
+    # =====================================================
+
+    @staticmethod
+    def choice(lista):
+
+        if len(lista) == 0:
+            raise ValueError(
+                "La lista no puede estar vacía"
+            )
+
+        indice = VAGRandom.randint(
+            0,
+            len(lista) - 1
+        )
+
+        return lista[indice]
+
+    # =====================================================
+    # SHUFFLE
+    # =====================================================
+
+    @staticmethod
+    def shuffle(lista, inplace=True):
+
+        if not inplace:
+            lista = lista.copy()
+
+        n = len(lista)
+
+        for i in range(n - 1, 0, -1):
+
+            j = VAGRandom.randint(0, i)
+
+            lista[i], lista[j] = (
+                lista[j],
+                lista[i]
+            )
+
+        return lista
