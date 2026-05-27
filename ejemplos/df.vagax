@@ -1,0 +1,5 @@
+// Archivo corregido para usar sintaxis VAGAX en lugar de Python
+dataframevag df = leer_csv("prueba.csv");
+
+mostrar(df_columnas(df));
+mostrar(df_detectar_tipos(df));
