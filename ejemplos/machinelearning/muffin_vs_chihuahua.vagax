@@ -1,0 +1,189 @@
+// =====================================================================
+// muffin_vs_chihuahua.vagax
+// Clasificador Muffin vs Chihuahua — 100% VAGAX nativo
+//
+// PREREQUISITO: Ejecutar primero preparar_dataset.py para generar los CSVs:
+//   python ejemplos/machinelearning/preparar_dataset.py
+//
+// FLUJO:
+//   Fase 1 — Cargar CSV de entrenamiento como Tensor
+//   Fase 2 — Separar X_train / y_train con split_xy
+//   Fase 3 — Cargar CSV de test (con filenames) con csv_test_to_data
+//   Fase 4 — Entrenar RNA y predecir sobre test en un solo paso
+//   Fase 5 — Umbralizar predicciones (> 0.5 → 1 chihuahua, sino 0 muffin)
+//   Fase 6 — Construir y guardar submission.csv
+// =====================================================================
+
+"=====================================================================";
+"  MUFFIN vs CHIHUAHUA - CLASIFICADOR RNA VAGAX";
+"  Arquitectura: MLP Input(400)->Dense(64)->ReLU->Dense(32)->ReLU->Dense(1)->Sigmoid";
+"  Optimizador: Adam | Loss: BCE | Sin TensorFlow, sin NumPy";
+"=====================================================================";
+"";
+
+// =====================================================================
+// FASE 1: CARGAR DATOS DE ENTRENAMIENTO
+// Formato CSV: p0,p1,...,p399,label (sin columna filename)
+// csv_to_tensor carga como Tensor saltando el header
+// =====================================================================
+
+"[FASE 1] Cargando dataset de entrenamiento...";
+
+listvag tensor_train = csv_to_tensor("ejemplos/machinelearning/train_muffin_chihuahua.csv");
+
+"  Estadisticas del dataset de train:";
+describe_data(tensor_train);
+
+// =====================================================================
+// FASE 2: SEPARAR FEATURES Y ETIQUETAS
+// split_xy(tensor, -1) → retorna [X_tensor, y_tensor]
+// La ultima columna es la etiqueta (label)
+// =====================================================================
+
+"";
+"[FASE 2] Separando features (X) y etiquetas (y)...";
+
+listvag datos_train = split_xy(tensor_train, -1);
+
+listvag X_train = get(datos_train, 0);
+listvag y_train = get(datos_train, 1);
+
+"  Primeras filas de X_train (features):";
+head_data(X_train, 2);
+
+"  Primeras filas de y_train (etiquetas):";
+head_data(y_train, 3);
+
+// =====================================================================
+// FASE 3: CARGAR DATOS DE TEST
+// Formato CSV: filename,p0,p1,...,p399,label
+// csv_test_to_data retorna [X_tensor, y_tensor, lista_filenames]
+// =====================================================================
+
+"";
+"[FASE 3] Cargando dataset de test...";
+
+listvag datos_test = csv_test_to_data("ejemplos/machinelearning/test_muffin_chihuahua.csv");
+
+listvag X_test      = get(datos_test, 0);
+listvag y_test      = get(datos_test, 1);
+listvag filenames   = get(datos_test, 2);
+
+"  Muestras de test cargadas:";
+len(filenames);
+
+// =====================================================================
+// FASE 4: ENTRENAMIENTO Y PREDICCION
+// run_classify_and_predict(X_train, y_train, X_test, y_test, epochs, lr)
+// Retorna [preds_test_lista, acc_train, acc_test]
+// =====================================================================
+
+"";
+"[FASE 4] Entrenando RNA y prediciendo sobre test...";
+"  Epochs: 30 | Learning Rate: 0.001 | Optimizer: Adam | Loss: BCE";
+"  (Ajustable segun capacidad del equipo)";
+"";
+
+listvag resultado = run_classify_and_predict(X_train, y_train, X_test, y_test, 30, 0.001);
+
+listvag predicciones = get(resultado, 0);
+floatvag acc_train   = get(resultado, 1);
+floatvag acc_test    = get(resultado, 2);
+
+"";
+"  Accuracy final en entrenamiento:";
+acc_train;
+"  Accuracy final en test:";
+acc_test;
+
+// =====================================================================
+// FASE 5: UMBRALIZAR PREDICCIONES
+// prob > 0.5 → clase 1 (chihuahua)
+// prob <= 0.5 → clase 0 (muffin)
+// =====================================================================
+
+"";
+"[FASE 5] Aplicando umbral de clasificacion (0.5)...";
+
+listvag labels_finales = range(0, 0);
+intvag n_pred = len(predicciones);
+intvag idx = 0;
+
+whilevag (idx < n_pred) {
+    floatvag prob = get(predicciones, idx);
+
+    intvag etiqueta = 0;
+    ifvag (prob > 0.5) {
+        etiqueta = 1;
+    } endvag
+
+    append(labels_finales, etiqueta);
+    idx = idx + 1;
+} endvag
+
+"  Total de predicciones generadas:";
+len(labels_finales);
+
+// Mostrar muestra de predicciones
+"";
+"  Muestra de predicciones (primeras 5):";
+"  Formato: [nombre_archivo] -> prob -> clase";
+intvag muestra = 0;
+whilevag (muestra < 5) {
+    ifvag (muestra < len(filenames)) {
+        stringvag nombre = get(filenames, muestra);
+        floatvag  prob2  = get(predicciones, muestra);
+        intvag    clase2 = get(labels_finales, muestra);
+        nombre;
+        prob2;
+        clase2;
+        "---";
+    } endvag
+    muestra = muestra + 1;
+} endvag
+
+// =====================================================================
+// FASE 6: GENERAR submission.csv
+// Formato: id,label
+// id = nombre del archivo de imagen
+// label = 0 (muffin) o 1 (chihuahua)
+// =====================================================================
+
+"";
+"[FASE 6] Generando submission.csv...";
+
+// Construir la matriz para csv_write
+// csv_write escribe lista de listas como CSV
+listvag submission = range(0, 0);
+
+// Fila de encabezado
+listvag encabezado = range(0, 0);
+append(encabezado, "id");
+append(encabezado, "label");
+append(submission, encabezado);
+
+// Filas de datos
+intvag idx_sub = 0;
+whilevag (idx_sub < len(labels_finales)) {
+    listvag fila = range(0, 0);
+    append(fila, get(filenames, idx_sub));
+    append(fila, get(labels_finales, idx_sub));
+    append(submission, fila);
+    idx_sub = idx_sub + 1;
+} endvag
+
+// Guardar en disco usando la libreria nativa ARCHIVOSVAG via csv_write
+csv_write("submission.csv", submission);
+
+"";
+"=====================================================================";
+"  COMPLETADO";
+"";
+"  submission.csv generado con exito!";
+"  Total de predicciones:";
+len(labels_finales);
+"";
+"  Leyenda:";
+"    label = 0 -> muffin";
+"    label = 1 -> chihuahua";
+"=====================================================================";

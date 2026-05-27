@@ -1,0 +1,104 @@
+// =====================================================================
+// preparar_dataset.vagax
+// Convierte las imágenes del dataset Muffin vs Chihuahua a CSV
+// usando ÚNICAMENTE las librerías nativas del proyecto VAGAX.
+//
+// Librerías usadas (todas del proyecto):
+//   IMAGENVAG → lee imágenes y genera CSV
+//   OSVAG     → rutas y sistema de archivos
+//   ARCHIVOSVAG → lectura/escritura de archivos
+//
+// Ejecutar desde la raíz del proyecto:
+//   python main.py
+//   → Ingresar: machinelearning/preparar_dataset.vagax
+// =====================================================================
+
+"====================================================================";
+"  PREPARACION DATASET MUFFIN vs CHIHUAHUA";
+"  Usando IMAGENVAG + OSVAG (CERO dependencias externas)";
+"====================================================================";
+"";
+
+// =====================================================================
+// CONFIGURACION DE RUTAS
+// Rutas absolutas al dataset (directorio archive(1))
+// =====================================================================
+
+stringvag BASE = "ejemplos/machinelearning/archive(1)";
+
+stringvag TRAIN_MUFFIN    = "ejemplos/machinelearning/archive(1)/train/muffin";
+stringvag TRAIN_CHIHUAHUA = "ejemplos/machinelearning/archive(1)/train/chihuahua";
+stringvag TEST_MUFFIN     = "ejemplos/machinelearning/archive(1)/test/muffin";
+stringvag TEST_CHIHUAHUA  = "ejemplos/machinelearning/archive(1)/test/chihuahua";
+
+stringvag CSV_TRAIN = "ejemplos/machinelearning/train_muffin_chihuahua.csv";
+stringvag CSV_TEST  = "ejemplos/machinelearning/test_muffin_chihuahua.csv";
+
+// Dimensiones de redimensionado (20x20 = 400 features)
+intvag TARGET_W = 20;
+intvag TARGET_H = 20;
+
+// Límite de imágenes por clase (para velocidad)
+// 500 de cada clase → 1000 muestras de train
+// 200 de cada clase → 400 muestras de test
+intvag MAX_TRAIN = 500;
+intvag MAX_TEST  = 200;
+
+// =====================================================================
+// FASE 1: GENERAR CSV DE ENTRENAMIENTO
+// imagen_dir_a_csv(clase0_dir, clase1_dir, csv_out, w, h, max)
+//   clase 0 = muffin
+//   clase 1 = chihuahua
+// =====================================================================
+
+"";
+"[1/2] Generando CSV de entrenamiento...";
+"  Clase 0 = muffin";
+TRAIN_MUFFIN;
+"  Clase 1 = chihuahua";
+TRAIN_CHIHUAHUA;
+"  Tamano de imagen: 20x20 = 400 features";
+"  Max por clase:";
+MAX_TRAIN;
+
+intvag n_train = imagen_dir_a_csv(TRAIN_MUFFIN, TRAIN_CHIHUAHUA, CSV_TRAIN, TARGET_W, TARGET_H, MAX_TRAIN);
+
+"";
+"  Muestras de entrenamiento generadas:";
+n_train;
+"  Guardado en:";
+CSV_TRAIN;
+
+// =====================================================================
+// FASE 2: GENERAR CSV DE TEST (con columna filename)
+// imagen_test_a_csv(clase0_dir, clase1_dir, csv_out, w, h, max)
+// =====================================================================
+
+"";
+"[2/2] Generando CSV de prueba...";
+"  Clase 0 = muffin";
+TEST_MUFFIN;
+"  Clase 1 = chihuahua";
+TEST_CHIHUAHUA;
+"  Max por clase:";
+MAX_TEST;
+
+intvag n_test = imagen_test_a_csv(TEST_MUFFIN, TEST_CHIHUAHUA, CSV_TEST, TARGET_W, TARGET_H, MAX_TEST);
+
+"";
+"  Muestras de test generadas:";
+n_test;
+"  Guardado en:";
+CSV_TEST;
+
+// =====================================================================
+// RESUMEN FINAL
+// =====================================================================
+
+"";
+"====================================================================";
+"  LISTO! Los CSVs estan listos para muffin_vs_chihuahua.vagax";
+"  Ejecuta:";
+"    python main.py";
+"    -> machinelearning/muffin_vs_chihuahua.vagax";
+"====================================================================";
