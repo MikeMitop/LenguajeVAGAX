@@ -188,20 +188,32 @@ class GRAFVAG:
     # PLOT LINEAL
     # ==========================================
     @staticmethod
-    def plot_lineal(etiquetas, valores):
+    def plot_lineal(etiquetas, valores, nombre_archivo="salida_lineal.ppm"):
         if not valores: return
+        
+        # Encontramos el mínimo y máximo real del dataset
+        min_v = valores[0]
         max_v = valores[0]
         for v in valores:
+            if v < min_v: min_v = v
             if v > max_v: max_v = v
-        if max_v == 0: max_v = 1
+            
+        # Calculamos el rango vertical real para la escala
+        rango_v = max_v - min_v
+        if rango_v == 0: rango_v = 1
+        
+        # Preparamos el lienzo usando el valor máximo para las etiquetas de referencia
         img, anc, alt, m_inf, m_izq, m_sup, m_der = GRAFVAG._preparar_lienzo(max_v)
         
         n = len(valores)
         ancho_secc = (anc - m_izq - m_der) // n
+        plot_h = alt - m_inf - m_sup - 20
         puntos = []
 
         for i, v in enumerate(valores):
-            h = int((v / max_v) * (alt - m_inf - m_sup - 20))
+            # Mapeo matemático dinámico: ajusta el punto proporcionalmente entre el min y el max
+            h = int(((v - min_v) / rango_v) * plot_h)
+            
             x_p = m_izq + (i * ancho_secc) + (ancho_secc // 2)
             y_p = (alt - m_inf) - h
             puntos.append((x_p, y_p))
@@ -213,7 +225,7 @@ class GRAFVAG:
             x1, y1 = puntos[i + 1]
             GRAFVAG._dibujar_linea(img, x0, y0, x1, y1, GRAFVAG.color_linea, alt, anc)
 
-        GRAFVAG._guardar(img, anc, alt, "salida_lineal.ppm")
+        GRAFVAG._guardar(img, anc, alt, nombre_archivo)
 
     # ==========================================
     # PLOT PASTEL
@@ -265,6 +277,36 @@ class GRAFVAG:
             angulo_inicio += angulo_barrido
 
         GRAFVAG._guardar(img, ancho, alto, "salida_pastel.ppm")
+
+
+    @staticmethod
+    def plot_funcion(tipo, inicio=0, fin=6.2831, puntos=200, nombre_archivo="salida_funcion.ppm"):
+        """
+        Genera automágicamente las etiquetas y los valores de una función
+        trigonométrica y la grafica de forma directa.
+        """
+        puntos_x = MATHVAG.linspace(inicio, fin, puntos)
+        etiquetas_x = [str(MATHVAG.round_val(x, 2)) for x in puntos_x]
+        
+        valores = []
+        tipo = tipo.lower()
+        
+        if tipo == "seno":
+            valores = [MATHVAG.sin(x) for x in puntos_x]
+            GRAFVAG.set_title("FUNCION SENO - VAGAX")
+        elif tipo == "coseno":
+            valores = [MATHVAG.cos(x) for x in puntos_x]
+            GRAFVAG.set_title("FUNCION COSENO - VAGAX")
+        elif tipo == "tangente":
+            for x in puntos_x:
+                val_tan = MATHVAG.tan(x)
+                valores.append(MATHVAG.clamp(val_tan, -3.0, 3.0))
+            GRAFVAG.set_title("FUNCION TANGENTE - VAGAX")
+        else:
+            raise Exception("❌ [GRAFVAG Error]: Función trigonométrica no soportada.")
+            
+        # Llama a tu plot_lineal universal que ya modificamos
+        GRAFVAG.plot_lineal(etiquetas_x, valores, nombre_archivo)
 
     # ==========================================
     # PLOT SCATTER (DISPERSIÓN)
