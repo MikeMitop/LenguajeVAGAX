@@ -306,14 +306,24 @@ class VAGAXInterpreter(VagaxParserVisitor):
             return args[0]
         if name == "append": 
             args[0].append(args[1])
-            return args[0]
+            return None  # mutación in-place; retornar None evita impresión al usar como statement
         if name == "contains": return args[1] in args[0]
         if name == "str": return str(args[0])
         if name == "to_num":
             text = str(args[0]).strip()
-            if "." in text:
-                return float(text)
-            return int(text)
+            try:
+                if "." in text:
+                    return float(text)
+                return int(text)
+            except ValueError:
+                return 0  # valor seguro si el texto no es numerico
+        if name == "es_numero":
+            text = str(args[0]).strip()
+            try:
+                float(text)
+                return 1
+            except ValueError:
+                return 0
         if name == "range": return list(range(int(args[0]), int(args[1])))
 
         # =============================================
@@ -329,6 +339,8 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "set_title": return GRAFVAG.set_title(args[0])
         if name == "set_xlabel": return GRAFVAG.set_xlabel(args[0])
         if name == "set_ylabel": return GRAFVAG.set_ylabel(args[0])
+        if name == "plot_scatter_regresion": return GRAFVAG.plot_scatter_regresion(args[0], args[1], args[2])
+        if name == "plot_r2_comparacion": return GRAFVAG.plot_r2_comparacion(args[0], args[1])
 
         # =============================================
         # REGRESIÓN (REGREVAG)
@@ -342,6 +354,7 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "poly_reg_predict": return REGREVAG.poly_reg_predict(args[0], args[1])
         if name == "multi_lin_reg_fit": return REGREVAG.multi_lin_reg_fit(args[0], args[1])
         if name == "multi_lin_reg_predict": return REGREVAG.multi_lin_reg_predict(args[0], args[1])
+        if name == "multi_lin_reg_r2": return REGREVAG.multi_lin_reg_r2(args[0], args[1], args[2])
 
         # Regresión Logística Multivariable
         if name == "log_reg_normalizar": return REGREVAG.log_reg_normalizar(args[0])
