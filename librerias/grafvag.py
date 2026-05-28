@@ -279,6 +279,107 @@ class GRAFVAG:
         GRAFVAG._guardar(img, ancho, alto, "salida_pastel.ppm")
 
 
+
+    # ==========================================
+    # PLOT REGRESIÓN LINEAL (Universal)
+    # ==========================================
+    @staticmethod
+    def plot_regresion_lineal(x_vals, y_vals, w, b, nombre_archivo="salida_regresion_lineal.ppm"):
+        if not x_vals or not y_vals: return
+        
+        # 1. Encontrar extremos reales de la data para encuadrar el lienzo
+        min_x, max_x = x_vals[0], x_vals[0]
+        min_y, max_y = y_vals[0], y_vals[0]
+        for x in x_vals:
+            if x < min_x: min_x = x
+            if x > max_x: max_x = x
+        for y in y_vals:
+            if y < min_y: min_y = y
+            if y > max_y: max_y = y
+
+        # Calcular predicciones para los extremos para verificar si alteran el rango Y
+        y_pred_min = w * min_x + b
+        y_pred_max = w * max_x + b
+        
+        if y_pred_min < min_y: min_y = y_pred_min
+        if y_pred_min > max_y: max_y = y_pred_min
+        if y_pred_max < min_y: min_y = y_pred_max
+        if y_pred_max > max_y: max_y = y_pred_max
+
+        rango_x = max_x - min_x if max_x != min_x else 1
+        rango_y = max_y - min_y if max_y != min_y else 1
+
+        # 2. Preparar el lienzo
+        img, anc, alt, m_inf, m_izq, m_sup, m_der = GRAFVAG._preparar_lienzo(max_y)
+        plot_w = anc - m_izq - m_der
+        plot_h = alt - m_inf - m_sup
+
+        # 3. Dibujar los puntos reales (Scatter en Azul)
+        for i in range(len(x_vals)):
+            px = m_izq + int(((x_vals[i] - min_x) / rango_x) * plot_w)
+            py = (alt - m_inf) - int(((y_vals[i] - min_y) / rango_y) * plot_h)
+            GRAFVAG._dibujar_circulo(img, px, py, 4, (50, 100, 255), alt, anc)
+
+        # 4. Dibujar la Recta de Regresión Ajustada (Línea en Rojo)
+        x0_p = m_izq
+        y0_p = (alt - m_inf) - int(((y_pred_min - min_y) / rango_y) * plot_h)
+        x1_p = m_izq + plot_w
+        y1_p = (alt - m_inf) - int(((y_pred_max - min_y) / rango_y) * plot_h)
+        
+        GRAFVAG._dibujar_linea(img, x0_p, y0_p, x1_p, y1_p, (255, 80, 80), alt, anc)
+
+        GRAFVAG._guardar(img, anc, alt, nombre_archivo)
+
+    # ==========================================
+    # PLOT REGRESIÓN LOGÍSTICA (Universal)
+    # ==========================================
+    @staticmethod
+    def plot_regresion_logistica(x_vals, y_vals, w, b, nombre_archivo="salida_logistica.ppm"):
+        if not x_vals or not y_vals: return
+
+        # 1. Extremos de X. Rango vertical fijo de 0.0 a 1.0 (Probabilidad)
+        min_x, max_x = x_vals[0], x_vals[0]
+        for x in x_vals:
+            if x < min_x: min_x = x
+            if x > max_x: max_x = x
+            
+        rango_x = max_x - min_x if max_x != min_x else 1
+        min_y, max_y = 0.0, 1.0
+
+        # 2. Preparar el lienzo (Máximo valor es 1 para el eje de probabilidad)
+        img, anc, alt, m_inf, m_izq, m_sup, m_der = GRAFVAG._preparar_lienzo(1.0)
+        plot_w = anc - m_izq - m_der
+        plot_h = alt - m_inf - m_sup
+
+        # 3. Dibujar muestras reales (Puntos arriba en 1 o abajo en 0)
+        for i in range(len(x_vals)):
+            px = m_izq + int(((x_vals[i] - min_x) / rango_x) * plot_w)
+            py = (alt - m_inf) - int(((y_vals[i] - min_y) / 1.0) * plot_h)
+            GRAFVAG._dibujar_circulo(img, px, py, 4, (50, 150, 50), alt, anc) # Verde
+
+        # 4. Trazar la Curva Sigmoide Continua (Muestreo de alta resolución interno)
+        puntos_curva_x = MATHVAG.linspace(min_x, max_x, 150)
+        puntos_pantalla = []
+        
+        for x in puntos_curva_x:
+            # z = w*x + b -> sigmoid(z)
+            z = w * x + b
+            probabilidad = MATHVAG.sigmoid(z)
+            
+            px = m_izq + int(((x - min_x) / rango_x) * plot_w)
+            py = (alt - m_inf) - int(((probabilidad - min_y) / 1.0) * plot_h)
+            puntos_pantalla.append((px, py))
+
+        # Unir los puntos de la sigmoide usando Bresenham lineal nativo
+        for i in range(len(puntos_pantalla) - 1):
+            x0, y0 = puntos_pantalla[i]
+            x1, y1 = puntos_pantalla[i + 1]
+            GRAFVAG._dibujar_linea(img, x0, y0, x1, y1, (255, 80, 80), alt, anc) # Morada/Roja
+
+        GRAFVAG._guardar(img, anc, alt, nombre_archivo)
+
+
+
     @staticmethod
     def plot_funcion(tipo, inicio=0, fin=6.2831, puntos=200, nombre_archivo="salida_funcion.ppm"):
         """
