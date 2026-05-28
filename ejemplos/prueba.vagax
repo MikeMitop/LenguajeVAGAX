@@ -1,0 +1,31 @@
+functionvag raizCuadrada(n) {
+    ifvag (n < 0) {
+        returnvag 0 - 1;
+    } endvag
+
+    ifvag (n == 0) {
+        returnvag 0;
+    } endvag
+
+    floatvag x = n;
+    floatvag raiz = 0;
+    floatvag tolerancia = 0.000001;
+
+    whilevag (1) {
+        raiz = 0.5 * (x + (n / x));
+
+        ifvag ((raiz - x) < 0) {
+            ifvag ((x - raiz) < tolerancia) {
+                returnvag raiz;
+            } endvag
+        } elsevag {
+            ifvag ((raiz - x) < tolerancia) {
+                returnvag raiz;
+            } endvag
+        } endvag
+
+        x = raiz;
+    } endvag
+} endvag
+
+raizCuadrada(49);

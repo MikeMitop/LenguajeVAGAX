@@ -1,0 +1,251 @@
+// =====================================================================
+// regresionlineal.vagax
+// Regresión Lineal Simple — COMPLETAMENTE GENÉRICO
+//
+// MODOS DE EJECUCIÓN:
+//
+//   Modo 1 — Interactivo (pregunta todo):
+//     python main.py
+//     → regresionlineal.vagax
+//
+//   Modo 2 — Solo archivo (pregunta columnas):
+//     python main.py regresionlineal.vagax datos.xlsx
+//
+//   Modo 3 — Totalmente automático:
+//     python main.py regresionlineal.vagax datos.xlsx col_x col_y
+//
+// CUALQUIER archivo .xlsx con CUALQUIER columna numérica funciona.
+//
+// Librerías del proyecto usadas:
+//   XLSXVAG  → lectura del .xlsx sin dependencias externas
+//   REGREVAG → regresión lineal (OLS), predicción y R²
+// =====================================================================
+
+// =====================================================================
+// PASO 1: OBTENER RUTA DEL ARCHIVO
+// get_arg(0)  → primer argumento CLI (archivo .xlsx)
+// num_args()  → cantidad de argumentos pasados
+// input_usuario(prompt) → lectura interactiva
+// =====================================================================
+
+stringvag ruta_xlsx = "";
+stringvag col_x = "";
+stringvag col_y = "";
+
+// ¿Se pasó el archivo como argumento CLI?
+intvag n_args = num_args();
+
+ifvag (n_args > 0) {
+    ruta_xlsx = get_arg(0);
+} endvag
+
+ifvag (n_args <= 0) {
+    "=====================================================================";
+    "  REGRESION LINEAL SIMPLE — VAGAX";
+    "  Motor: XLSXVAG + REGREVAG (sin librerias externas)";
+    "=====================================================================";
+    "";
+    ruta_xlsx = input_usuario("Ruta del archivo .xlsx (ej: ejemplos/data.xlsx): ");
+} endvag
+
+// =====================================================================
+// PASO 2: CARGAR EL ARCHIVO Y MOSTRAR COLUMNAS DISPONIBLES
+// =====================================================================
+
+"";
+"[1] Cargando archivo:";
+ruta_xlsx;
+
+listvag tabla = xlsx_leer_auto(ruta_xlsx);
+
+"";
+"--- INFORMACION DEL DATASET ---";
+xlsx_resumen(tabla);
+
+"";
+"--- COLUMNAS DISPONIBLES ---";
+listvag headers = xlsx_headers(tabla);
+headers;
+
+// =====================================================================
+// PASO 3: ELEGIR COLUMNAS X e Y
+// Pueden venir de args CLI (posiciones 1 y 2) o por input interactivo
+// =====================================================================
+
+ifvag (n_args > 1) {
+    col_x = get_arg(1);
+} endvag
+
+ifvag (n_args <= 1) {
+    "";
+    col_x = input_usuario("Columna INDEPENDIENTE (X): ");
+} endvag
+
+ifvag (n_args > 2) {
+    col_y = get_arg(2);
+} endvag
+
+ifvag (n_args <= 2) {
+    col_y = input_usuario("Columna DEPENDIENTE (Y):   ");
+} endvag
+
+"";
+"[2] Variables seleccionadas:";
+"  X (independiente):";
+col_x;
+"  Y (dependiente):";
+col_y;
+
+// =====================================================================
+// PASO 4: EXTRAER COLUMNAS NUMÉRICAS DEL XLSX
+// xlsx_columnas(tabla, [col_x, col_y]) → [[vals_x], [vals_y]]
+// Solo incluye filas donde AMBAS columnas son numéricas y no nulas
+// =====================================================================
+
+"";
+"[3] Extrayendo datos numericos...";
+
+listvag nombres = range(0, 0);
+append(nombres, col_x);
+append(nombres, col_y);
+
+listvag columnas = xlsx_columnas(tabla, nombres);
+
+listvag X = get(columnas, 0);
+listvag Y = get(columnas, 1);
+
+intvag n_muestras = len(X);
+"  Muestras validas (ambas columnas numericas):";
+n_muestras;
+
+// Muestra de los primeros valores
+"  Primeros 3 valores de X:";
+get(X, 0);
+get(X, 1);
+get(X, 2);
+"  Primeros 3 valores de Y:";
+get(Y, 0);
+get(Y, 1);
+get(Y, 2);
+
+// =====================================================================
+// PASO 5: AJUSTAR EL MODELO (Mínimos Cuadrados Ordinarios)
+// lin_reg_fit(x_list, y_list) → [m, b]
+// Modelo: Y = m * X + b
+// =====================================================================
+
+"";
+"[4] Ajustando modelo de regresion lineal (OLS)...";
+
+listvag modelo = lin_reg_fit(X, Y);
+
+floatvag m = get(modelo, 0);
+floatvag b = get(modelo, 1);
+
+"";
+"=====================================================================";
+"  MODELO AJUSTADO";
+"";
+"  Pendiente  (m):";
+m;
+"  Intercepto (b):";
+b;
+"";
+"  Formula: Y = m * X + b";
+"=====================================================================";
+
+// =====================================================================
+// PASO 6: BONDAD DE AJUSTE — R²
+// lin_reg_r2(x, y, modelo) → [0, 1]
+// =====================================================================
+
+"";
+"[5] Evaluando bondad de ajuste...";
+
+floatvag r2 = lin_reg_r2(X, Y, modelo);
+
+"  R cuadrado (R2):";
+r2;
+
+ifvag (r2 > 0.7) {
+    "  Calidad del ajuste: BUENO  (R2 > 0.70)";
+} endvag
+ifvag (r2 > 0.4) {
+    ifvag (r2 <= 0.7) {
+        "  Calidad del ajuste: MODERADO  (0.40 < R2 <= 0.70)";
+    } endvag
+} endvag
+ifvag (r2 <= 0.4) {
+    "  Calidad del ajuste: BAJO  (R2 <= 0.40)";
+    "  Nota: otras variables pueden explicar mejor la variable Y.";
+} endvag
+
+// =====================================================================
+// PASO 7: ESTADÍSTICAS DESCRIPTIVAS
+// =====================================================================
+
+"";
+"[6] Estadisticas descriptivas:";
+"  Promedio X:";
+floatvag x_mean = mean(X);
+x_mean;
+"  Promedio Y:";
+floatvag y_mean = mean(Y);
+y_mean;
+"  Total observaciones:";
+n_muestras;
+
+// =====================================================================
+// PASO 8: PREDICCIONES INTERACTIVAS
+// El usuario puede ingresar valores de X para predecir Y
+// =====================================================================
+
+"";
+"[7] Predicciones del modelo (ingrese 'fin' para terminar):";
+"";
+
+stringvag entrada = "";
+intvag seguir = 1;
+
+whilevag (seguir == 1) {
+    entrada = input_usuario("  Ingrese valor de X para predecir Y (o 'fin'): ");
+
+    ifvag (entrada == "fin") {
+        seguir = 0;
+    } endvag
+
+    ifvag (entrada != "fin") {
+        floatvag x_pred = to_num(entrada);
+        floatvag y_pred = lin_reg_predict(modelo, x_pred);
+        "  X =";
+        x_pred;
+        "  -> Y predicho =";
+        y_pred;
+        "";
+    } endvag
+} endvag
+
+// =====================================================================
+// RESUMEN FINAL
+// =====================================================================
+
+"";
+"=====================================================================";
+"  RESULTADO FINAL";
+"  Archivo: ";
+ruta_xlsx;
+"  Columna X:";
+col_x;
+"  Columna Y:";
+col_y;
+"  Muestras: ";
+n_muestras;
+"";
+"  Modelo: Y = m*X + b";
+"  m =";
+m;
+"  b =";
+b;
+"  R2 =";
+r2;
+"=====================================================================";
