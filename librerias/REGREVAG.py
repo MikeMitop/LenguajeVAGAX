@@ -386,3 +386,25 @@ class REGREVAG:
         for i in range(len(x_vec)):
             result += model[i + 1] * x_vec[i]
         return result
+
+    @staticmethod
+    def multi_lin_reg_r2(X_matrix, y_list, model):
+        """
+        Coeficiente de determinación R² para regresión multivariable.
+        X_matrix : lista de listas de features
+        y_list   : valores reales objetivo
+        model    : lista [b0, b1, b2, ...] retornada por multi_lin_reg_fit
+        """
+        n = len(y_list)
+        if n == 0:
+            return 0.0
+        y_mean = MATHVAG.mean(y_list)
+        ss_tot = 0.0
+        ss_res = 0.0
+        for i in range(n):
+            pred = REGREVAG.multi_lin_reg_predict(model, X_matrix[i])
+            ss_res += (y_list[i] - pred) ** 2
+            ss_tot += (y_list[i] - y_mean) ** 2
+        if ss_tot == 0:
+            return 1.0
+        return 1.0 - (ss_res / ss_tot)

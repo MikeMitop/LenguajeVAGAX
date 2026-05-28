@@ -188,32 +188,20 @@ class GRAFVAG:
     # PLOT LINEAL
     # ==========================================
     @staticmethod
-    def plot_lineal(etiquetas, valores, nombre_archivo="salida_lineal.ppm"):
+    def plot_lineal(etiquetas, valores):
         if not valores: return
-        
-        # Encontramos el mínimo y máximo real del dataset
-        min_v = valores[0]
         max_v = valores[0]
         for v in valores:
-            if v < min_v: min_v = v
             if v > max_v: max_v = v
-            
-        # Calculamos el rango vertical real para la escala
-        rango_v = max_v - min_v
-        if rango_v == 0: rango_v = 1
-        
-        # Preparamos el lienzo usando el valor máximo para las etiquetas de referencia
+        if max_v == 0: max_v = 1
         img, anc, alt, m_inf, m_izq, m_sup, m_der = GRAFVAG._preparar_lienzo(max_v)
         
         n = len(valores)
         ancho_secc = (anc - m_izq - m_der) // n
-        plot_h = alt - m_inf - m_sup - 20
         puntos = []
 
         for i, v in enumerate(valores):
-            # Mapeo matemático dinámico: ajusta el punto proporcionalmente entre el min y el max
-            h = int(((v - min_v) / rango_v) * plot_h)
-            
+            h = int((v / max_v) * (alt - m_inf - m_sup - 20))
             x_p = m_izq + (i * ancho_secc) + (ancho_secc // 2)
             y_p = (alt - m_inf) - h
             puntos.append((x_p, y_p))
@@ -225,7 +213,7 @@ class GRAFVAG:
             x1, y1 = puntos[i + 1]
             GRAFVAG._dibujar_linea(img, x0, y0, x1, y1, GRAFVAG.color_linea, alt, anc)
 
-        GRAFVAG._guardar(img, anc, alt, nombre_archivo)
+        GRAFVAG._guardar(img, anc, alt, "salida_lineal.ppm")
 
     # ==========================================
     # PLOT PASTEL
@@ -278,137 +266,6 @@ class GRAFVAG:
 
         GRAFVAG._guardar(img, ancho, alto, "salida_pastel.ppm")
 
-
-
-    # ==========================================
-    # PLOT REGRESIÓN LINEAL (Universal)
-    # ==========================================
-    @staticmethod
-    def plot_regresion_lineal(x_vals, y_vals, w, b, nombre_archivo="salida_regresion_lineal.ppm"):
-        if not x_vals or not y_vals: return
-        
-        # 1. Encontrar extremos reales de la data para encuadrar el lienzo
-        min_x, max_x = x_vals[0], x_vals[0]
-        min_y, max_y = y_vals[0], y_vals[0]
-        for x in x_vals:
-            if x < min_x: min_x = x
-            if x > max_x: max_x = x
-        for y in y_vals:
-            if y < min_y: min_y = y
-            if y > max_y: max_y = y
-
-        # Calcular predicciones para los extremos para verificar si alteran el rango Y
-        y_pred_min = w * min_x + b
-        y_pred_max = w * max_x + b
-        
-        if y_pred_min < min_y: min_y = y_pred_min
-        if y_pred_min > max_y: max_y = y_pred_min
-        if y_pred_max < min_y: min_y = y_pred_max
-        if y_pred_max > max_y: max_y = y_pred_max
-
-        rango_x = max_x - min_x if max_x != min_x else 1
-        rango_y = max_y - min_y if max_y != min_y else 1
-
-        # 2. Preparar el lienzo
-        img, anc, alt, m_inf, m_izq, m_sup, m_der = GRAFVAG._preparar_lienzo(max_y)
-        plot_w = anc - m_izq - m_der
-        plot_h = alt - m_inf - m_sup
-
-        # 3. Dibujar los puntos reales (Scatter en Azul)
-        for i in range(len(x_vals)):
-            px = m_izq + int(((x_vals[i] - min_x) / rango_x) * plot_w)
-            py = (alt - m_inf) - int(((y_vals[i] - min_y) / rango_y) * plot_h)
-            GRAFVAG._dibujar_circulo(img, px, py, 4, (50, 100, 255), alt, anc)
-
-        # 4. Dibujar la Recta de Regresión Ajustada (Línea en Rojo)
-        x0_p = m_izq
-        y0_p = (alt - m_inf) - int(((y_pred_min - min_y) / rango_y) * plot_h)
-        x1_p = m_izq + plot_w
-        y1_p = (alt - m_inf) - int(((y_pred_max - min_y) / rango_y) * plot_h)
-        
-        GRAFVAG._dibujar_linea(img, x0_p, y0_p, x1_p, y1_p, (255, 80, 80), alt, anc)
-
-        GRAFVAG._guardar(img, anc, alt, nombre_archivo)
-
-    # ==========================================
-    # PLOT REGRESIÓN LOGÍSTICA (Universal)
-    # ==========================================
-    @staticmethod
-    def plot_regresion_logistica(x_vals, y_vals, w, b, nombre_archivo="salida_logistica.ppm"):
-        if not x_vals or not y_vals: return
-
-        # 1. Extremos de X. Rango vertical fijo de 0.0 a 1.0 (Probabilidad)
-        min_x, max_x = x_vals[0], x_vals[0]
-        for x in x_vals:
-            if x < min_x: min_x = x
-            if x > max_x: max_x = x
-            
-        rango_x = max_x - min_x if max_x != min_x else 1
-        min_y, max_y = 0.0, 1.0
-
-        # 2. Preparar el lienzo (Máximo valor es 1 para el eje de probabilidad)
-        img, anc, alt, m_inf, m_izq, m_sup, m_der = GRAFVAG._preparar_lienzo(1.0)
-        plot_w = anc - m_izq - m_der
-        plot_h = alt - m_inf - m_sup
-
-        # 3. Dibujar muestras reales (Puntos arriba en 1 o abajo en 0)
-        for i in range(len(x_vals)):
-            px = m_izq + int(((x_vals[i] - min_x) / rango_x) * plot_w)
-            py = (alt - m_inf) - int(((y_vals[i] - min_y) / 1.0) * plot_h)
-            GRAFVAG._dibujar_circulo(img, px, py, 4, (50, 150, 50), alt, anc) # Verde
-
-        # 4. Trazar la Curva Sigmoide Continua (Muestreo de alta resolución interno)
-        puntos_curva_x = MATHVAG.linspace(min_x, max_x, 150)
-        puntos_pantalla = []
-        
-        for x in puntos_curva_x:
-            # z = w*x + b -> sigmoid(z)
-            z = w * x + b
-            probabilidad = MATHVAG.sigmoid(z)
-            
-            px = m_izq + int(((x - min_x) / rango_x) * plot_w)
-            py = (alt - m_inf) - int(((probabilidad - min_y) / 1.0) * plot_h)
-            puntos_pantalla.append((px, py))
-
-        # Unir los puntos de la sigmoide usando Bresenham lineal nativo
-        for i in range(len(puntos_pantalla) - 1):
-            x0, y0 = puntos_pantalla[i]
-            x1, y1 = puntos_pantalla[i + 1]
-            GRAFVAG._dibujar_linea(img, x0, y0, x1, y1, (255, 80, 80), alt, anc) # Morada/Roja
-
-        GRAFVAG._guardar(img, anc, alt, nombre_archivo)
-
-
-
-    @staticmethod
-    def plot_funcion(tipo, inicio=0, fin=6.2831, puntos=200, nombre_archivo="salida_funcion.ppm"):
-        """
-        Genera automágicamente las etiquetas y los valores de una función
-        trigonométrica y la grafica de forma directa.
-        """
-        puntos_x = MATHVAG.linspace(inicio, fin, puntos)
-        etiquetas_x = [str(MATHVAG.round_val(x, 2)) for x in puntos_x]
-        
-        valores = []
-        tipo = tipo.lower()
-        
-        if tipo == "seno":
-            valores = [MATHVAG.sin(x) for x in puntos_x]
-            GRAFVAG.set_title("FUNCION SENO - VAGAX")
-        elif tipo == "coseno":
-            valores = [MATHVAG.cos(x) for x in puntos_x]
-            GRAFVAG.set_title("FUNCION COSENO - VAGAX")
-        elif tipo == "tangente":
-            for x in puntos_x:
-                val_tan = MATHVAG.tan(x)
-                valores.append(MATHVAG.clamp(val_tan, -3.0, 3.0))
-            GRAFVAG.set_title("FUNCION TANGENTE - VAGAX")
-        else:
-            raise Exception("❌ [GRAFVAG Error]: Función trigonométrica no soportada.")
-            
-        # Llama a tu plot_lineal universal que ya modificamos
-        GRAFVAG.plot_lineal(etiquetas_x, valores, nombre_archivo)
-
     # ==========================================
     # PLOT SCATTER (DISPERSIÓN)
     # ==========================================
@@ -455,6 +312,145 @@ class GRAFVAG:
             GRAFVAG._dibujar_circulo(img, px, py, 4, punto_color, alto, ancho)
 
         GRAFVAG._guardar(img, ancho, alto, "salida_scatter.ppm")
+
+    # ==========================================
+    # PLOT SCATTER + LÍNEA DE REGRESIÓN
+    # ==========================================
+    @staticmethod
+    def plot_scatter_regresion(x_vals, y_vals, modelo, nombre="salida_scatter_reg.ppm"):
+        """
+        Dibuja los puntos de dispersión y superpone la recta Y = m*X + b.
+        modelo = [m, b]
+        """
+        if not x_vals or not y_vals:
+            return
+
+        m = modelo[0]
+        b = modelo[1]
+
+        min_x = x_vals[0]
+        max_x = x_vals[0]
+        min_y = y_vals[0]
+        max_y = y_vals[0]
+        for v in x_vals:
+            if v < min_x: min_x = v
+            if v > max_x: max_x = v
+        for v in y_vals:
+            if v < min_y: min_y = v
+            if v > max_y: max_y = v
+
+        # Extender rango Y para incluir los extremos de la recta
+        y_line_min = m * min_x + b
+        y_line_max = m * max_x + b
+        if y_line_min < min_y: min_y = y_line_min
+        if y_line_max > max_y: max_y = y_line_max
+        # Pequeño margen visual
+        margen_y = (max_y - min_y) * 0.05
+        if margen_y == 0: margen_y = 1
+        min_y -= margen_y
+        max_y += margen_y
+
+        rango_x = max_x - min_x if max_x != min_x else 1
+        rango_y = max_y - min_y if max_y != min_y else 1
+
+        ancho, alto = 650, 500
+        m_inf, m_izq, m_sup, m_der = 80, 80, 70, 50
+        plot_w = ancho - m_izq - m_der
+        plot_h = alto - m_inf - m_sup
+
+        img = [[GRAFVAG.color_fondo for _ in range(ancho)] for _ in range(alto)]
+
+        GRAFVAG.dibujar_texto(img, (ancho // 2) - (len(GRAFVAG.titulo) * 5), 25, GRAFVAG.titulo)
+        GRAFVAG.dibujar_texto(img, 10, m_sup - 30, GRAFVAG.label_y)
+        GRAFVAG.dibujar_texto(img, (ancho // 2) - (len(GRAFVAG.label_x) * 5), alto - 35, GRAFVAG.label_x)
+
+        # Ejes
+        for y in range(m_sup, alto - m_inf): img[y][m_izq] = GRAFVAG.color_texto
+        for x in range(m_izq, ancho - m_der): img[alto - m_inf][x] = GRAFVAG.color_texto
+
+        # Puntos de dispersión (azul)
+        for i in range(len(x_vals)):
+            px = m_izq + int(((x_vals[i] - min_x) / rango_x) * plot_w)
+            py = (alto - m_inf) - int(((y_vals[i] - min_y) / rango_y) * plot_h)
+            GRAFVAG._dibujar_circulo(img, px, py, 3, (50, 100, 255), alto, ancho)
+
+        # Línea de regresión (rojo)
+        px0 = m_izq
+        py0 = (alto - m_inf) - int(((y_line_min - min_y) / rango_y) * plot_h)
+        px1 = m_izq + plot_w
+        py1 = (alto - m_inf) - int(((y_line_max - min_y) / rango_y) * plot_h)
+        # Línea gruesa (3 píxeles)
+        GRAFVAG._dibujar_linea(img, px0, py0, px1, py1, (220, 30, 30), alto, ancho)
+        GRAFVAG._dibujar_linea(img, px0, py0 + 1, px1, py1 + 1, (220, 30, 30), alto, ancho)
+        GRAFVAG._dibujar_linea(img, px0, py0 - 1, px1, py1 - 1, (220, 30, 30), alto, ancho)
+
+        GRAFVAG._guardar(img, ancho, alto, nombre)
+
+    # ==========================================
+    # PLOT R² COMPARACIÓN (barras por variable)
+    # ==========================================
+    @staticmethod
+    def plot_r2_comparacion(etiquetas, r2_vals, nombre="salida_r2_comparacion.ppm"):
+        """
+        Gráfica de barras donde cada barra representa el R² de una variable X
+        frente a la variable Y fija (ingreso_mensual).
+        Los valores R² están en [0, 1].
+        """
+        if not r2_vals:
+            return
+
+        ancho, alto = 650, 500
+        m_inf, m_izq, m_sup, m_der = 80, 80, 70, 50
+        img = [[GRAFVAG.color_fondo for _ in range(ancho)] for _ in range(alto)]
+
+        GRAFVAG.dibujar_texto(img, (ancho // 2) - (len(GRAFVAG.titulo) * 5), 25, GRAFVAG.titulo)
+        GRAFVAG.dibujar_texto(img, 10, m_sup - 30, GRAFVAG.label_y)
+        GRAFVAG.dibujar_texto(img, (ancho // 2) - (len(GRAFVAG.label_x) * 5), alto - 35, GRAFVAG.label_x)
+
+        # Ejes
+        for y in range(m_sup, alto - m_inf): img[y][m_izq] = GRAFVAG.color_texto
+        for x in range(m_izq, ancho - m_der): img[alto - m_inf][x] = GRAFVAG.color_texto
+
+        # Líneas guía en 0.25, 0.50, 0.75, 1.00
+        plot_h = alto - m_inf - m_sup - 20
+        for nivel in [0.25, 0.50, 0.75, 1.00]:
+            y_g = (alto - m_inf) - int(nivel * plot_h)
+            for x in range(m_izq, ancho - m_der):
+                if x % 5 == 0: img[y_g][x] = (200, 200, 200)
+            # Etiqueta del nivel
+            lbl = str(int(nivel * 100)) + "%"
+            GRAFVAG.dibujar_texto(img, m_izq - 45, y_g - 5, lbl)
+
+        n = len(r2_vals)
+        ancho_secc = (ancho - m_izq - m_der) // n
+
+        for i, v in enumerate(r2_vals):
+            v_clamp = v if v >= 0 else 0
+            v_clamp = v_clamp if v_clamp <= 1 else 1
+            h = int(v_clamp * plot_h)
+            x_c = m_izq + (i * ancho_secc) + (ancho_secc // 2)
+            x_i = x_c - (ancho_secc // 3)
+            x_f = x_c + (ancho_secc // 3)
+
+            color_actual = GRAFVAG.PALETA[i % len(GRAFVAG.PALETA)]
+
+            for y in range((alto - m_inf) - h, alt - m_inf if False else alto - m_inf):
+                for x in range(x_i, x_f):
+                    if 0 <= y < alto and 0 <= x < ancho:
+                        img[y][x] = color_actual
+
+            # Etiqueta de la variable X debajo
+            lbl_x = etiquetas[i] if i < len(etiquetas) else str(i)
+            tx = x_c - (len(lbl_x) * 5)
+            GRAFVAG.dibujar_texto(img, tx, alto - m_inf + 10, lbl_x)
+
+            # Valor R² encima de la barra
+            r2_str = str(int(v_clamp * 1000))
+            top_bar = (alto - m_inf) - h - 15
+            if top_bar < m_sup: top_bar = m_sup
+            GRAFVAG.dibujar_texto(img, x_c - 15, top_bar, "." + r2_str)
+
+        GRAFVAG._guardar(img, ancho, alto, nombre)
 
     # ==========================================
     # PLOT HEATMAP
