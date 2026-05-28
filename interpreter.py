@@ -13,6 +13,7 @@ from librerias.LEARNVAGAX import LEARNVAGAX
 from librerias.VAGML.Tensor import Tensor
 from librerias.VAGML.dataframe import leer_csv, div_entreno
 from librerias.IMAGENVAG import IMAGENVAG
+from librerias.XLSXVAG import XLSXVAG
 from runtime.mostrar import builtin_mostrar
 
 
@@ -28,6 +29,7 @@ class VAGAXInterpreter(VagaxParserVisitor):
 
         self.variables = {}
         self.functions = {}
+        self.script_args = []   # argumentos CLI inyectados desde main.py
 
         # gestor de memoria
         self.memory = MemoryManager(4096)
@@ -340,6 +342,28 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "poly_reg_predict": return REGREVAG.poly_reg_predict(args[0], args[1])
         if name == "multi_lin_reg_fit": return REGREVAG.multi_lin_reg_fit(args[0], args[1])
         if name == "multi_lin_reg_predict": return REGREVAG.multi_lin_reg_predict(args[0], args[1])
+
+        # =============================================
+        # XLSX (XLSXVAG)
+        # =============================================
+        if name == "xlsx_leer": return XLSXVAG.leer_xlsx(args[0], int(args[1]) if len(args) > 1 else 0)
+        if name == "xlsx_leer_auto": return XLSXVAG.leer_xlsx_auto(args[0], int(args[1]) if len(args) > 1 else 0)
+        if name == "xlsx_columna": return XLSXVAG.obtener_columna(args[0], args[1])
+        if name == "xlsx_columnas": return XLSXVAG.obtener_columnas_numericas(args[0], args[1])
+        if name == "xlsx_resumen": return XLSXVAG.resumen(args[0])
+        if name == "xlsx_headers": return XLSXVAG.get_headers(args[0])
+
+        # =============================================
+        # ARGUMENTOS DEL SCRIPT (acceso a argv CLI)
+        # =============================================
+        if name == "get_arg":
+            idx = int(args[0])
+            return self.script_args[idx] if idx < len(self.script_args) else ""
+        if name == "num_args":
+            return len(self.script_args)
+        if name == "input_usuario":
+            prompt = str(args[0]) if args else ""
+            return input(prompt)
 
         # =============================================
         # CLASIFICACIÓN (CLASIFVAG)
