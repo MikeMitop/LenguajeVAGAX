@@ -34,6 +34,14 @@ VAGAX es un lenguaje de programación pensado como un DSL (Lenguaje para un domi
 
 El lenguaje expone una sintaxis propia con palabras clave `vag`-sufijadas (`ifvag`, `whilevag`, `functionvag`, `intvag`, etc.) que lo distinguen visualmente de cualquier otro lenguaje.
 
+
+Creado por: 
+
+Miguel Celis
+Nicolas Jimenez
+Alejandro Lindeman
+Jeronimo Linares
+
 ---
 
 ## Arquitectura del Proyecto
@@ -359,7 +367,7 @@ showvag();
 
 ## Requisitos Cumplidos
 
-### ✅ Operaciones Aritméticas Completas
+###  Operaciones Aritméticas Completas
 
 Implementadas en `MATHVAG.py` y directamente en la gramática.
 
@@ -373,7 +381,7 @@ Cubre: suma, resta, multiplicación, división, módulo, potencia, raíces, loga
 
 ---
 
-### ✅ Operaciones de Matrices
+### Operaciones de Matrices
 
 Implementadas en `MATRXVAG.py`:
 
@@ -391,7 +399,7 @@ mat_print(suma);
 
 ---
 
-### ✅ Condicionales y Ciclos
+### Condicionales y Ciclos
 
 ```vagax
 // IF / ELSE
@@ -416,7 +424,7 @@ forvag (intvag j = 0; j < 5; j = j + 1) {
 
 ---
 
-### ✅ Gráficas de Datos
+###  Gráficas de Datos
 
 ```vagax
 listvag x = range(0, 0);
@@ -434,7 +442,7 @@ showvag();
 
 ---
 
-### ✅ Manejo de Archivos
+###  Manejo de Archivos
 
 ```vagax
 // Lectura de texto
@@ -453,7 +461,7 @@ listvag hoja = xlsx_leer_auto("mi_archivo.xlsx");
 
 ---
 
-### ✅ Regresión Lineal y Logística
+### Regresión Lineal y Logística
 
 Ver `ejemplos/regresionlineal.vagax` — ejemplo interactivo genérico:
 
@@ -473,7 +481,7 @@ floatvag prob = log_reg_predict(modelo_log, 5.0);
 
 ---
 
-### ✅ Clasificador — Perceptrón Multicapa (MLP)
+###  Clasificador — Perceptrón Multicapa (MLP)
 
 El motor `VAGML` implementa backpropagation completo desde cero:
 
@@ -498,7 +506,7 @@ floatvag loss = get(res, 0);
 
 ---
 
-### ✅ Agrupamiento, Clasificación y Predicción con Redes Neuronales
+###  Agrupamiento, Clasificación y Predicción con Redes Neuronales
 
 ```vagax
 // CLUSTERING — K-Means
@@ -672,4 +680,3 @@ Cada nodo del AST es visitado por un método `visit*` específico en `interprete
 
 ---
 
-*VAGAX — Construido con ANTLRv4, Python y cero dependencias externas.*
