@@ -1,0 +1,50 @@
+// analisis_completo.vagax
+
+functionvag analizar_todas_columnas(ruta) {
+    
+    // Leemos todo el archivo Excel
+    listvag tabla_excel = xlsx_leer_auto(ruta, 0);
+    
+    // Obtenemos la lista con todos los nombres de las columnas
+    listvag encabezados = xlsx_headers(tabla_excel);
+    
+    intvag num_cols = len(encabezados);
+    intvag i = 0;
+    
+    // Recorremos cada una de las columnas
+    whilevag (i < num_cols) {
+        
+        stringvag nombre_col = get(encabezados, i);
+        
+        // Extraemos solo los datos numéricos de esa columna en específico
+        listvag datos_col = xlsx_columna(tabla_excel, nombre_col);
+        intvag cantidad_datos = len(datos_col);
+        
+        // Verificamos que la columna tenga números (ignorará columnas que solo tengan texto)
+        ifvag (cantidad_datos > 0) {
+            
+            // Calculamos las estadísticas
+            floatvag media_val = mean(datos_col);
+            floatvag mediana_val = median(datos_col);
+            floatvag desv_val = std_dev(datos_col);
+            
+            // Imprimimos el bloque de resultados en consola
+            mostrar("=================================");
+            mostrar("Analizando columna: ", nombre_col);
+            mostrar("Total de registros numericos: ", cantidad_datos);
+            mostrar("Promedio: ", media_val);
+            mostrar("Mediana: ", mediana_val);
+            mostrar("Desv. Estandar: ", desv_val);
+            
+        } endvag
+        
+        i = i + 1;
+        
+    } endvag
+    
+    returnvag 1;
+    
+} endvag
+
+// Llamamos a la función con el archivo data.xlsx
+analizar_todas_columnas("ejemplos/data.xlsx");
