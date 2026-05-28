@@ -790,6 +790,132 @@ class MATHVAG:
 
 
 
+
+
+
+
+    @staticmethod
+    def mean(lista):
+        if not lista: return 0
+        return MATHVAG._sum(lista) / len(lista)
+
+    @staticmethod
+    def variance(lista):
+        if len(lista) < 2: return 0
+        m = MATHVAG.mean(lista)
+        s = 0
+        for x in lista:
+            s += (x - m) ** 2
+        return s / (len(lista) - 1)
+
+    @staticmethod
+    def std_dev(lista):
+        return MATHVAG.sqrt(MATHVAG.variance(lista))
+
+    @staticmethod
+    def covariance(x, y):
+        if len(x) != len(y): raise Exception("Listas deben tener el mismo tamaño")
+        n = len(x)
+        if n < 2: return 0
+        mx, my = MATHVAG.mean(x), MATHVAG.mean(y)
+        s = 0
+        for i in range(n):
+            s += (x[i] - mx) * (y[i] - my)
+        return s / (n - 1)
+
+    @staticmethod
+    def correlation(x, y):
+        cov = MATHVAG.covariance(x, y)
+        sx, sy = MATHVAG.std_dev(x), MATHVAG.std_dev(y)
+        if sx == 0 or sy == 0: return 0
+        return cov / (sx * sy)
+
+    @staticmethod
+    def percentile(lista, p):
+        if not lista: return 0
+        ordered = MATHVAG._sort(lista[:])
+        n = len(ordered)
+        k = (p / 100) * (n - 1)
+        f = MATHVAG.floor_val(k)
+        c = MATHVAG.ceil_val(k)
+        if f == c: return ordered[int(k)]
+        return (ordered[int(f)] * (c - k)) + (ordered[int(c)] * (k - f))
+
+    @staticmethod
+    def iqr(lista):
+        return MATHVAG.percentile(lista, 75) - MATHVAG.percentile(lista, 25)
+
+    @staticmethod
+    def minimo(lista):
+        if len(lista) == 0: return 0.0
+        m = lista[0]
+        for x in lista:
+            if x < m: m = x
+        return float(m)
+
+    @staticmethod
+    def maximo(lista):
+        if len(lista) == 0: return 0.0
+        m = lista[0]
+        for x in lista:
+            if x > m: m = x
+        return float(m)
+
+    @staticmethod
+    def rango(lista):
+        if len(lista) == 0: return 0.0
+        return MATHVAG.maximo(lista) - MATHVAG.minimo(lista)
+
+    @staticmethod
+    def promedio(lista):
+        if len(lista) == 0: return 0.0
+        return MATHVAG._sum(lista) / len(lista)
+
+    @staticmethod
+    def mediana(lista):
+        n = len(lista)
+        if n == 0: return 0.0
+        lista_ordenada = MATHVAG._sort(lista[:])
+        mitad = n // 2
+        if n % 2 != 0: return float(lista_ordenada[mitad])
+        return (lista_ordenada[mitad - 1] + lista_ordenada[mitad]) / 2.0
+
+    @staticmethod
+    def _raiz_cuadrada(x):
+        if x < 0: return 0.0
+        if x == 0: return 0.0
+        estimacion = x / 2.0
+        while True:
+            mejor_estimacion = 0.5 * (estimacion + x / estimacion)
+            diferencia = mejor_estimacion - estimacion
+            if diferencia < 0: diferencia = -diferencia
+            if diferencia < 1e-10: return mejor_estimacion
+            estimacion = mejor_estimacion
+
+    @staticmethod
+    def varianza(lista):
+        n = len(lista)
+        if n == 0: return 0.0
+        media_val = MATHVAG.promedio(lista)
+        suma_cuadrados = 0
+        for x in lista:
+            suma_cuadrados += (x - media_val) ** 2
+        return suma_cuadrados / n
+
+    @staticmethod
+    def desviacion_estandar(lista):
+        return MATHVAG._raiz_cuadrada(MATHVAG.varianza(lista))
+
+    @staticmethod
+    def moda(lista):
+        if len(lista) == 0: return []
+        frecuencias = {}
+        for x in lista:
+            frecuencias[x] = frecuencias.get(x, 0) + 1
+        max_frecuencia = MATHVAG.maximo(list(frecuencias.values()))
+        return [k for k, v in frecuencias.items() if v == max_frecuencia]
+
+
 class VAGRandom:
 
     _seed = 123456789
