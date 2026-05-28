@@ -31,18 +31,18 @@ class MLP:
         return grad
 
     def parameters(self):
-        # Aquí va tu lógica original que recorre las capas 
-        # y reúne los pesos (W) y sesgos (B)
+
         params = []
+
         for layer in self.layers:
-            params.extend(layer.parameters())
+
+            if hasattr(layer, "parameters"):
+
+                params.extend(
+                    layer.parameters()
+                )
+
         return params
-
-    def get_parameters(self):
-        """Alias para mantener compatibilidad con el optimizador SGD"""
-        return self.parameters()
-
-
 
     def predict(self, X, threshold=0.5):
         """Predicción con umbral para clasificación binaria"""
