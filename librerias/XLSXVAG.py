@@ -416,3 +416,173 @@ class XLSXVAG:
         # Muestra las primeras 3 filas
         for i, fila in enumerate(tabla[1:4]):
             print('  Fila ' + str(i + 1) + ': ' + str(fila))
+
+    # =========================================================
+    # LECTOR CSV / TSV / TXT → mismo formato de tabla que xlsx
+    # =========================================================
+
+    @staticmethod
+    def _parsear_valor(s):
+        """
+        Intenta convertir un string a número (int o float).
+        Si falla, retorna el string original.
+        """
+        s = s.strip()
+        if not s:
+            return None
+        try:
+            if '.' in s or 'e' in s.lower():
+                return float(s)
+            return int(s)
+        except ValueError:
+            return s
+
+    @staticmethod
+    def _detectar_delimitador(primera_linea):
+        """
+        Heurística simple: cuenta tabs, punto-y-coma y comas.
+        Retorna el delimitador más frecuente.
+        """
+        counts = {
+            ',':  primera_linea.count(','),
+            '\t': primera_linea.count('\t'),
+            ';':  primera_linea.count(';'),
+        }
+        mejor = max(counts, key=counts.get)
+        return mejor if counts[mejor] > 0 else ','
+
+    @staticmethod
+    def leer_csv_tabla(ruta, delimitador=None):
+        """
+        Lee un archivo CSV/TSV/TXT y retorna una lista de listas (tabla).
+        La primera fila es el header. Valores numéricos son int o float.
+        Soporta datasets de +10.000 filas sin pandas.
+
+        ruta       : ruta al archivo
+        delimitador: ',' '\\t' ';'  — si None, se detecta automáticamente
+        """
+        try:
+            with open(ruta, 'r', encoding='utf-8', errors='replace') as f:
+                lineas = f.readlines()
+        except FileNotFoundError:
+            raise FileNotFoundError('[XLSXVAG] Archivo no encontrado: ' + ruta)
+
+        if not lineas:
+            raise Exception('[XLSXVAG] Archivo CSV vacío: ' + ruta)
+
+        # Quitar BOM UTF-8 si existe
+        lineas[0] = lineas[0].lstrip('\ufeff')
+
+        # Detectar delimitador a partir de la primera línea
+        if delimitador is None:
+            delimitador = XLSXVAG._detectar_delimitador(lineas[0])
+
+        tabla = []
+        for linea in lineas:
+            linea = linea.rstrip('\n\r')
+            if not linea.strip():
+                continue  # omitir líneas vacías
+
+            # Split respetando comillas (parser manual mínimo)
+            campos = XLSXVAG._split_csv_line(linea, delimitador)
+            tabla.append(campos)
+
+        if not tabla:
+            raise Exception('[XLSXVAG] No se encontraron datos en: ' + ruta)
+
+        # Primera fila = headers (strings)
+        headers = [str(c).strip() for c in tabla[0]]
+
+        # Filas siguientes → convertir valores a numérico donde sea posible
+        resultado = [headers]
+        for fila_raw in tabla[1:]:
+            fila = [XLSXVAG._parsear_valor(str(c)) for c in fila_raw]
+            resultado.append(fila)
+
+        return resultado
+
+    @staticmethod
+    def _split_csv_line(linea, delimitador):
+        """
+        Parser CSV manual que respeta comillas dobles.
+        Retorna lista de strings.
+        """
+        campos = []
+        campo_actual = []
+        dentro_comillas = False
+        i = 0
+        while i < len(linea):
+            c = linea[i]
+            if c == '"':
+                if dentro_comillas and i + 1 < len(linea) and linea[i + 1] == '"':
+                    # Comilla escapada
+                    campo_actual.append('"')
+                    i += 2
+                    continue
+                dentro_comillas = not dentro_comillas
+            elif c == delimitador and not dentro_comillas:
+                campos.append(''.join(campo_actual).strip())
+                campo_actual = []
+                i += 1
+                continue
+            else:
+                campo_actual.append(c)
+            i += 1
+        campos.append(''.join(campo_actual).strip())
+        return campos
+
+    @staticmethod
+    def leer_csv_auto(ruta, delimitador=None):
+        """
+        Igual que leer_csv_tabla pero resuelve la ruta automáticamente
+        (igual que leer_xlsx_auto).
+        """
+        ruta = str(ruta).strip()
+        candidatos = [
+            ruta,
+            'ejemplos/' + ruta,
+            'ejemplos/machinelearning/' + ruta,
+        ]
+        vistos = set()
+        sin_dup = []
+        for c in candidatos:
+            if c not in vistos:
+                vistos.add(c)
+                sin_dup.append(c)
+
+        for candidato in sin_dup:
+            try:
+                tabla = XLSXVAG.leer_csv_tabla(candidato, delimitador)
+                print('[XLSXVAG] Archivo encontrado: ' + candidato)
+                return tabla
+            except FileNotFoundError:
+                continue
+            except Exception as e:
+                raise
+
+        raise Exception(
+            '[XLSXVAG] Archivo no encontrado. Rutas intentadas:\n' +
+            '\n'.join('  - ' + c for c in sin_dup)
+        )
+
+    @staticmethod
+    def tabla_leer_auto(ruta, delimitador=None):
+        """
+        Lector universal: detecta el formato por la extensión del archivo
+        y retorna siempre una tabla en el formato [[headers], [fila], ...].
+
+        Extensiones soportadas:
+          .xlsx          → leer_xlsx_auto
+          .csv           → leer_csv_auto (delimitador ',')
+          .tsv           → leer_csv_auto (delimitador '\\t')
+          .txt           → leer_csv_auto (delimitador detectado)
+          otros          → intenta como CSV
+        """
+        ruta_limpia = str(ruta).strip().lower()
+        if ruta_limpia.endswith('.xlsx'):
+            return XLSXVAG.leer_xlsx_auto(ruta)
+        elif ruta_limpia.endswith('.tsv'):
+            return XLSXVAG.leer_csv_auto(ruta, '\t')
+        else:
+            # .csv, .txt, o cualquier otro → CSV con detección automática
+            return XLSXVAG.leer_csv_auto(ruta, delimitador)

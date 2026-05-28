@@ -90,6 +90,214 @@ class REGREVAG:
         return MATHVAG.sigmoid(z)
 
     # ==========================================
+    # REGRESIÓN LOGÍSTICA MULTIVARIABLE
+    # Para datasets de +10.000 filas.
+    # Usa mini-batch SGD + normalización Z-score.
+    # ==========================================
+
+    @staticmethod
+    def log_reg_normalizar(X_matrix):
+        """
+        Normalización Z-score sobre cada columna feature.
+        Retorna (X_norm, medias, desv_std).
+        X_matrix : lista de listas  [[x1,x2,...], ...]
+        """
+        if not X_matrix:
+            raise Exception("log_reg_normalizar: matriz vacía")
+        n = len(X_matrix)
+        k = len(X_matrix[0])
+
+        # Calcular media y std por columna
+        medias = []
+        stds   = []
+        for j in range(k):
+            col = [X_matrix[i][j] for i in range(n)]
+            mu  = MATHVAG.mean(col)
+            sd  = MATHVAG.std_dev(col)
+            medias.append(mu)
+            stds.append(sd if sd != 0 else 1.0)
+
+        # Normalizar
+        X_norm = []
+        for i in range(n):
+            fila = [(X_matrix[i][j] - medias[j]) / stds[j] for j in range(k)]
+            X_norm.append(fila)
+
+        return [X_norm, medias, stds]
+
+    @staticmethod
+    def log_reg_normalizar_con(X_matrix, medias, stds):
+        """
+        Aplica normalización Z-score usando medias y stds ya calculados.
+        Útil para normalizar datos de prueba con los parámetros de entrenamiento.
+        """
+        k = len(medias)
+        X_norm = []
+        for fila in X_matrix:
+            f_norm = [(fila[j] - medias[j]) / stds[j] for j in range(k)]
+            X_norm.append(f_norm)
+        return X_norm
+
+    @staticmethod
+    def log_reg_multi_fit(X_matrix, y_list, lr=0.1, epochs=100, batch_size=64, verbose=True):
+        """
+        Entrena regresión logística multivariable usando mini-batch SGD.
+        Apto para datasets de +10.000 filas.
+
+        X_matrix  : lista de listas [[x1, x2, ...], ...]  (ya normalizados)
+        y_list    : lista de etiquetas binarias [0, 1, ...]
+        lr        : tasa de aprendizaje (default 0.1)
+        epochs    : número de épocas (default 100)
+        batch_size: tamaño de mini-lote (default 64)
+        verbose   : imprime pérdida cada 10 épocas
+
+        Retorna lista de pesos [w1, w2, ..., wk, bias]
+        """
+        n = len(X_matrix)
+        if n == 0:
+            raise Exception("log_reg_multi_fit: datos vacíos")
+        if len(X_matrix) != len(y_list):
+            raise Exception("log_reg_multi_fit: X e y deben tener la misma longitud")
+
+        k = len(X_matrix[0])  # número de features
+        lr    = float(lr)
+        epochs = int(epochs)
+        batch_size = int(batch_size)
+        if batch_size <= 0 or batch_size > n:
+            batch_size = n  # batch completo
+
+        # Inicializar pesos (ceros)
+        pesos = [0.0] * k
+        bias  = 0.0
+
+        for epoch in range(epochs):
+            # Mini-batches (orden fijo sin shuffle para reproducibilidad)
+            for inicio in range(0, n, batch_size):
+                fin = inicio + batch_size if inicio + batch_size < n else n
+                b_size = fin - inicio
+
+                dw = [0.0] * k
+                db = 0.0
+
+                for i in range(inicio, fin):
+                    # z = w · x + b
+                    z = bias
+                    for j in range(k):
+                        z += pesos[j] * X_matrix[i][j]
+                    p  = MATHVAG.sigmoid(z)
+                    dz = p - y_list[i]
+
+                    for j in range(k):
+                        dw[j] += dz * X_matrix[i][j]
+                    db += dz
+
+                # Actualizar parámetros
+                for j in range(k):
+                    pesos[j] -= lr * dw[j] / b_size
+                bias -= lr * db / b_size
+
+            # Log-loss cada 10 épocas si verbose
+            if verbose and (epoch + 1) % 10 == 0:
+                loss = REGREVAG._log_loss_interno(X_matrix, y_list, pesos, bias, n, k)
+                print('[LOG_REG] Época ' + str(epoch + 1) +
+                      '/' + str(epochs) +
+                      '  log-loss: ' + str(round(loss, 6)))
+
+        # Retornar [w1,...,wk, bias] como lista VAGAX
+        resultado = list(pesos)
+        resultado.append(bias)
+        return resultado
+
+    @staticmethod
+    def _log_loss_interno(X_matrix, y_list, pesos, bias, n, k):
+        """
+        Calcula binary cross-entropy (log-loss) internamente.
+        """
+        eps  = 1e-15
+        loss = 0.0
+        for i in range(n):
+            z = bias
+            for j in range(k):
+                z += pesos[j] * X_matrix[i][j]
+            p    = MATHVAG.sigmoid(z)
+            p    = max(eps, min(1 - eps, p))  # clip numérico
+            yi   = y_list[i]
+            loss -= yi * MATHVAG.log(p) + (1 - yi) * MATHVAG.log(1 - p)
+        return loss / n
+
+    @staticmethod
+    def log_reg_multi_predict_prob(modelo, x_vec):
+        """
+        Predice la probabilidad P(y=1) para un vector de features.
+        modelo : lista [w1, ..., wk, bias]  (retornado por log_reg_multi_fit)
+        x_vec  : lista [x1, x2, ...] con la misma cantidad de features
+        """
+        k = len(modelo) - 1  # último elemento = bias
+        z = modelo[k]        # empieza con el bias
+        for j in range(k):
+            z += modelo[j] * x_vec[j]
+        return MATHVAG.sigmoid(z)
+
+    @staticmethod
+    def log_reg_multi_predict(modelo, x_vec, umbral=0.5):
+        """
+        Clasifica una muestra como 0 o 1 según el umbral.
+        umbral : probabilidad de corte (default 0.5)
+        """
+        prob = REGREVAG.log_reg_multi_predict_prob(modelo, x_vec)
+        return 1 if prob >= umbral else 0
+
+    @staticmethod
+    def log_reg_multi_predict_batch(modelo, X_matrix, umbral=0.5):
+        """
+        Clasifica un lote completo de muestras.
+        Retorna lista de predicciones [0 o 1].
+        """
+        return [REGREVAG.log_reg_multi_predict(modelo, fila, umbral)
+                for fila in X_matrix]
+
+    @staticmethod
+    def log_reg_multi_logloss(modelo, X_matrix, y_list):
+        """
+        Calcula el log-loss (binary cross-entropy) del modelo sobre los datos.
+        """
+        n = len(X_matrix)
+        k = len(modelo) - 1
+        return REGREVAG._log_loss_interno(X_matrix, y_list,
+                                         modelo[:k], modelo[k], n, k)
+
+    @staticmethod
+    def log_reg_multi_accuracy(modelo, X_matrix, y_list, umbral=0.5):
+        """
+        Calcula la exactitud (accuracy) del modelo: fracción de predicciones correctas.
+        """
+        n = len(X_matrix)
+        if n == 0:
+            return 0.0
+        correctos = 0
+        for i in range(n):
+            pred = REGREVAG.log_reg_multi_predict(modelo, X_matrix[i], umbral)
+            if pred == int(y_list[i]):
+                correctos += 1
+        return correctos / n
+
+    @staticmethod
+    def log_reg_multi_confusion(modelo, X_matrix, y_list, umbral=0.5):
+        """
+        Calcula la matriz de confusión 2x2.
+        Retorna [VP, FP, FN, VN].
+        """
+        vp = fp = fn = vn = 0
+        for i in range(len(X_matrix)):
+            pred  = REGREVAG.log_reg_multi_predict(modelo, X_matrix[i], umbral)
+            real  = int(y_list[i])
+            if real == 1 and pred == 1: vp += 1
+            elif real == 0 and pred == 1: fp += 1
+            elif real == 1 and pred == 0: fn += 1
+            else:                         vn += 1
+        return [vp, fp, fn, vn]
+
+    # ==========================================
     # REGRESIÓN POLINOMIAL
     # ==========================================
     @staticmethod
