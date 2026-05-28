@@ -1,6 +1,6 @@
-# VAGAX — Lenguaje de programación
+# VAGAX — Lenguaje de Dominio Específico para Deep Learning
 
-VAGAX es un lenguaje de programación pensado como un DSL (Lenguaje para un dominio específico) enfocado para correr desde operaciones aritméticas básicas, funciones, condicionales, bucles, expresiones, importación de librerías, carga de archivos, etc; hasta su objetivo principal: Deep Learning. Diseñado con ANTLR4 + Python y pensado en su visualización como PSeInt sin quitar la sencillez de Python.
+> **DSL (Domain-Specific Language)** diseñado e implementado con **ANTLRv4** sobre Python, orientado a operaciones de Aprendizaje Profundo (Deep Learning) y Machine Learning. Implementado con el patrón de diseño **Visitor**.
 
 ---
 
@@ -34,74 +34,64 @@ VAGAX es un lenguaje de programación pensado como un DSL (Lenguaje para un domi
 
 El lenguaje expone una sintaxis propia con palabras clave `vag`-sufijadas (`ifvag`, `whilevag`, `functionvag`, `intvag`, etc.) que lo distinguen visualmente de cualquier otro lenguaje.
 
-
-Creado por: 
-
-Miguel Celis
-Nicolas Jimenez
-Alejandro Lindeman
-Jeronimo Linares
-
 ---
 
 ## Arquitectura del Proyecto
 
-A continuación se detalla la estructura completa de carpetas y archivos del proyecto, explicando la función de cada componente dentro del ecosistema VAGAX:
-
 ```
 LenguajeVAGAX-main/
 │
-├── main.py                     ← Punto de entrada principal. Maneja la ejecución en modo consola y procesa los argumentos CLI para cargar y ejecutar los scripts `.vagax`.
-├── repl.py                     ← Implementa el Read-Eval-Print Loop (REPL), permitiendo ejecutar instrucciones VAGAX de forma interactiva línea por línea.
-├── interpreter.py              ← El núcleo del lenguaje. Implementa el patrón Visitor recorriendo el AST generado por ANTLR y delegando la ejecución a las librerías nativas.
-├── memory_manager.py           ← Gestor de memoria propio que simula la reserva y liberación de bloques (4096 bloques en total), permitiendo operaciones estilo C (`allocvag`, `freevag`).
+├── main.py                     ← Punto de entrada (modo consola + CLI)
+├── repl.py                     ← REPL interactivo
+├── interpreter.py              ← Intérprete (patrón Visitor sobre AST de ANTLR)
+├── memory_manager.py           ← Gestor de memoria propio (4096 bloques)
 │
-├── grammar/                    ← Contiene las reglas sintácticas y léxicas del lenguaje.
-│   ├── VagaxLexer.g4           ← Define los tokens del lenguaje (palabras clave, operadores, literales).
-│   ├── VagaxParser.g4          ← Define las reglas gramaticalales (cómo se estructuran las sentencias, bloques, funciones, etc.).
-│   └── generated/              ← Clases en Python generadas automáticamente por ANTLR4 a partir de los archivos `.g4`.
+├── grammar/
+│   ├── VagaxLexer.g4           ← Gramática léxica (ANTLR4)
+│   ├── VagaxParser.g4          ← Gramática sintáctica (ANTLR4)
+│   └── generated/              ← Clases generadas por ANTLR4
 │       ├── VagaxLexer.py
 │       ├── VagaxParser.py
 │       └── VagaxParserVisitor.py
 │
-├── librerias/                  ← Colección de librerías nativas del lenguaje, creadas bajo la filosofía "Zero-Dependency" (sin usar librerías externas de Python).
-│   ├── MATHVAG.py              ← Implementa operaciones matemáticas avanzadas, trigonometría y un generador de números pseudoaleatorios.
-│   ├── MATRXVAG.py             ← Funciones para la creación y manipulación de matrices (suma, multiplicación, inversa, transpuesta).
-│   ├── REGREVAG.py             ← Modelos de regresión (lineal, logística, polinomial, multivariable).
-│   ├── CLASIFVAG.py            ← Algoritmos de clasificación y agrupamiento (KNN, K-Means, Árboles de decisión).
-│   ├── DATASETVAG.py           ← Utilidades para cargar, limpiar, normalizar y transformar datasets (principalmente CSV).
-│   ├── LEARNVAGAX.py           ← API de alto nivel para facilitar el entrenamiento y evaluación de modelos de Machine Learning.
-│   ├── ARCHIVOSVAG.py          ← Operaciones de entrada/salida para leer y escribir archivos de texto y CSV.
-│   ├── XLSXVAG.py              ← Parser personalizado capaz de leer archivos de Excel (.xlsx) desempaquetando el ZIP y leyendo el XML interno.
-│   ├── IMAGENVAG.py            ← Lector y procesador de imágenes (JPEG/BMP) a nivel de píxel sin utilizar librerías como Pillow.
-│   ├── STRUCTVAG.py            ← Implementación nativa para la lectura de datos binarios, emulando la funcionalidad de `struct` en Python.
-│   ├── OSVAG.py                ← Provee funciones para interactuar con el sistema de archivos (crear directorios, listar archivos).
-│   ├── SYSVAG.py               ← Controla configuraciones del sistema, rutas de ejecución y acceso a argumentos pasados por consola.
-│   ├── grafvag.py              ← Herramienta para generar visualizaciones gráficas de los datos procesados en el lenguaje.
-│   └── VAGML/                  ← El motor de Deep Learning del proyecto, creado desde cero.
-│       ├── Tensor.py           ← Estructura fundamental para almacenar datos n-dimensionales, con soporte para operaciones vectorizadas y diferenciación automática (Autograd).
-│       ├── Layer.py            ← Representa las capas de la red neuronal (por ejemplo, capas densas con pesos y sesgos).
-│       ├── Activation.py       ← Funciones de activación para introducir no-linealidad (ReLU, Sigmoid, Tanh, Softmax).
-│       ├── Losses.py           ← Funciones de pérdida para calcular el error del modelo (MSE, Cross-Entropy).
-│       ├── Optimizers.py       ← Algoritmos de optimización para actualizar los pesos durante el entrenamiento (SGD, Adam).
-│       ├── MLP.py              ← Definición de la estructura del Perceptrón Multicapa, orquestando el forward y backward pass.
-│       ├── Data.py             ← Herramientas para agrupar y mezclar los datos en lotes (batches) durante el entrenamiento.
-│       ├── ENTRENAMIENTO.py    ← Lógica principal que coordina los ciclos (epochs) de entrenamiento supervisado.
-│       └── Trainer.py          ← Interfaz simplificada para configurar y lanzar procesos de entrenamiento y validación.
+├── librerias/                  ← Librerías nativas del lenguaje (zero-dependency)
+│   ├── MATHVAG.py              ← Matemáticas completas + generador aleatorio
+│   ├── MATRXVAG.py             ← Álgebra matricial
+│   ├── REGREVAG.py             ← Regresión lineal, logística y polinomial
+│   ├── CLASIFVAG.py            ← Clasificación: KNN, árbol de decisión, K-Means
+│   ├── DATASETVAG.py           ← Carga/preprocesamiento de datasets CSV
+│   ├── LEARNVAGAX.py           ← API de alto nivel para entrenamiento de RNA
+│   ├── ARCHIVOSVAG.py          ← Lectura/escritura de archivos
+│   ├── XLSXVAG.py              ← Lector de archivos Excel .xlsx (sin openpyxl)
+│   ├── IMAGENVAG.py            ← Lector de imágenes JPEG/BMP (sin Pillow)
+│   ├── STRUCTVAG.py            ← Parser binario (reemplaza struct de Python)
+│   ├── OSVAG.py                ← Utilidades de sistema de archivos (reemplaza os)
+│   ├── SYSVAG.py               ← Utilidades de sistema (reemplaza sys)
+│   ├── grafvag.py              ← Gráficas de datos
+│   └── VAGML/                  ← Motor de Deep Learning propio
+│       ├── Tensor.py           ← Tensor n-dimensional con autograd
+│       ├── MLP.py              ← Perceptrón Multicapa
+│       ├── Layer.py            ← Capas densas (Dense)
+│       ├── Activation.py       ← ReLU, Sigmoid, Tanh, Softmax
+│       ├── Losses.py           ← MSE, BCE, Cross-Entropy
+│       ├── Optimizers.py       ← SGD, Adam
+│       ├── Data.py             ← DataLoader con shuffling
+│       ├── ENTRENAMIENTO.py    ← Entrenamiento supervisado completo
+│       └── Trainer.py          ← Trainer de alto nivel
 │
-└── ejemplos/                   ← Directorio con múltiples scripts `.vagax` que demuestran las capacidades del lenguaje.
+└── ejemplos/                   ← Scripts .vagax de demostración
     ├── suma.vagax
     ├── regresion.vagax
-    ├── regresionlineal.vagax   ← Regresión lineal genérica sobre cualquier archivo .xlsx interactivo.
-    ├── test_xor_ML.vagax       ← Prueba clásica de propagación hacia atrás resolviendo la compuerta XOR.
+    ├── regresionlineal.vagax   ← Regresión lineal genérica sobre cualquier .xlsx
+    ├── test_xor_ML.vagax       ← Backpropagation con compuerta XOR
     ├── test_clasificacion_ML.vagax
     ├── test_kmeans_ML.vagax
     ├── analisisestadistico.vagax
-    ├── fib.vagax               ← Ejemplo clásico de recursión (Fibonacci).
+    ├── fib.vagax               ← Fibonacci (recursión)
     ├── bubblesort.vagax
     └── machinelearning/
-        ├── muffin_vs_chihuahua.vagax  ← Proyecto completo de clasificación de imágenes usando el motor VAGML.
-        └── preparar_dataset.vagax     ← Script que procesa un directorio de imágenes y las convierte a un formato tabular.
+        ├── muffin_vs_chihuahua.vagax  ← Clasificador de imágenes
+        └── preparar_dataset.vagax     ← Preprocesamiento de imágenes → CSV
 ```
 
 ---
@@ -112,15 +102,15 @@ La gramática está definida en dos archivos ANTLRv4:
 
 ### Tipos de datos
 
-| Keyword VAGAX | Tipo         | Ejemplo                        |
-|---------------|--------------|-------------------------------|
-| `intvag`      | Entero       | `intvag x = 5;`               |
-| `floatvag`    | Flotante     | `floatvag pi = 3.14159;`      |
-| `stringvag`   | Cadena       | `stringvag s = "hola";`       |
-| `boolvag`     | Booleano     | `boolvag b = sisas;`          |
-| `listvag`     | Lista        | `listvag datos = range(0,0);` |
-| `matrixvag`   | Matriz       | `matrixvag M;`                |
-| `dataframevag`| DataFrame    | `dataframevag df;`            |
+| Keyword VAGAX  | Tipo      | Ejemplo                       |
+| -------------- | --------- | ----------------------------- |
+| `intvag`       | Entero    | `intvag x = 5;`               |
+| `floatvag`     | Flotante  | `floatvag pi = 3.14159;`      |
+| `stringvag`    | Cadena    | `stringvag s = "hola";`       |
+| `boolvag`      | Booleano  | `boolvag b = sisas;`          |
+| `listvag`      | Lista     | `listvag datos = range(0,0);` |
+| `matrixvag`    | Matriz    | `matrixvag M;`                |
+| `dataframevag` | DataFrame | `dataframevag df;`            |
 
 > Los literales booleanos son `sisas` (true) y `nokas` (false).
 
@@ -160,24 +150,28 @@ factorial(10);
 
 ### Operadores
 
-| Categoría      | Operadores                     |
-|----------------|-------------------------------|
-| Aritméticos    | `+`, `-`, `*`, `/`, `%`, `^`  |
-| Comparación    | `==`, `!=`, `<`, `>`, `<=`, `>=` |
-| Lógicos        | `&&`, `\|\|`, `!`             |
-| Potencia       | `^` (ej: `2^8` = 256)         |
+| Categoría   | Operadores                       |
+| ----------- | -------------------------------- |
+| Aritméticos | `+`, `-`, `*`, `/`, `%`, `^`     |
+| Comparación | `==`, `!=`, `<`, `>`, `<=`, `>=` |
+| Lógicos     | `&&`, `\|\|`, `!`                |
+| Potencia    | `^` (ej: `2^8` = 256)            |
 
-### Conversión entre tipos
+### Gestión de Memoria
 
-VAGAX incluye funciones nativas para convertir valores entre los diferentes tipos de datos, lo que es esencial al procesar datos importados de archivos externos o cuando se necesita mostrar información:
+```vagax
+allocvag bloque = 512;   // Reservar memoria
+freevag(bloque);         // Liberar
+memvag();                // Ver estado del heap
+```
 
-- `to_num(valor)`: Convierte un string o cualquier valor a## Librerías Nativas
+---
+
+## Librerías Nativas
 
 Todas implementadas desde cero en Python, sin dependencias externas.
 
 ### MATHVAG — Matemáticas completas
-
-Esta librería centraliza todas las operaciones matemáticas que van más allá del álgebra básica soportada en la gramática. Su función en el proyecto es proveer el soporte trigonométrico, logarítmico, y de generación de números aleatorios necesarios para inicializar pesos en redes neuronales, calcular funciones de pérdida y realizar análisis estadístico sin depender de los módulos `math` o `random` nativos de Python.
 
 ```vagax
 floatvag r = sqrt(144);       // Raíz cuadrada → 12.0
@@ -195,8 +189,6 @@ Incluye además: `tan`, `asin`, `acos`, `atan`, `atan2`, `floor`, `ceil`, `round
 
 ### MATRXVAG — Álgebra matricial
 
-Esta librería está diseñada específicamente para manejar listas bidimensionales como matrices. Su función principal es facilitar la programación de modelos de aprendizaje automático y cálculos estadísticos multivariables, ofreciendo operaciones esenciales como el producto punto, el cálculo de la inversa y la obtención de determinantes, evitando por completo la dependencia de librerías externas especializadas en computación científica como `numpy`.
-
 ```vagax
 listvag A = mat_create(3, 3, 0);
 listvag B = mat_identity(3);
@@ -210,8 +202,6 @@ mat_print(C);
 
 ### REGREVAG — Regresión
 
-Se encarga de abstraer los algoritmos predictivos clásicos orientados a problemas de regresión. Su papel es fundamental para aquellos casos donde no se requiere la complejidad de una red neuronal completa, permitiendo ajustar y predecir valores continuos utilizando mínimos cuadrados para modelos lineales, o implementando un entrenamiento iterativo básico para regresiones logísticas, convirtiéndose en el puente entre el análisis exploratorio y el machine learning dentro de VAGAX.
-
 ```vagax
 // Regresión lineal simple (OLS)
 listvag modelo = lin_reg_fit(X, Y);
@@ -222,7 +212,7 @@ floatvag r2    = lin_reg_r2(X, Y, modelo);
 listvag modelo_log = log_reg_fit(X, Y, 0.1, 1000);
 floatvag prob      = log_reg_predict(modelo_log, 5.0);
 
-// Regresión polinomial
+// Regresión polinomials
 listvag coefs = poly_reg_fit(X, Y, 3);
 floatvag yp   = poly_reg_predict(coefs, 2.5);
 
@@ -231,8 +221,6 @@ listvag beta = multi_lin_reg_fit(X_matrix, Y);
 ```
 
 ### CLASIFVAG — Clasificación y Agrupamiento
-
-Actúa como el núcleo de Machine Learning tradicional, complementando a las redes neuronales. Implementa algoritmos clásicos como K-Nearest Neighbors (KNN), Árboles de Decisión y agrupamiento con K-Means. Su objetivo es brindar a los usuarios herramientas variadas de clasificación y segmentación de datos sin tener que programar los algoritmos desde cero, funcionando como el equivalente a los componentes básicos de `scikit-learn` en el entorno cerrado de VAGAX.
 
 ```vagax
 // K-Nearest Neighbors
@@ -247,8 +235,6 @@ listvag resultado = kmeans(X_datos, 3, 100);
 ```
 
 ### LEARNVAGAX — Red Neuronal MLP (API de alto nivel)
-
-Esta librería funciona como una capa envolvente y simplificada que interactúa directamente con el motor interno de VAGML. Su propósito principal es ocultar la complejidad matemática de los Tensores, las capas y el backpropagation, permitiendo a los usuarios entrenar y evaluar Perceptrones Multicapa (MLP) mediante unas pocas líneas de código. Es la herramienta definitiva del lenguaje para que cualquier programa VAGAX alcance fácilmente su meta principal de Aprendizaje Profundo.
 
 ```vagax
 // Clasificador binario (acepta Tensores o listas)
@@ -268,8 +254,6 @@ listvag losses = run_loss_trace(200, 0.05);
 
 ### DATASETVAG — Datasets
 
-Sirve como el eslabón entre los datos crudos y los algoritmos analíticos. Se encarga de transformar listas provenientes de archivos en estructuras de datos listas para su procesamiento matemático (como Tensores), brindando también funciones de normalización y separación de variables dependientes e independientes, fundamentales en cualquier pipeline de ciencia de datos serio.
-
 ```vagax
 listvag tensor  = csv_to_tensor("datos.csv");
 listvag split   = split_xy(tensor, -1);
@@ -282,8 +266,6 @@ head_data(tensor, 5);
 ```
 
 ### XLSXVAG — Lector Excel
-
-Implementa un mecanismo ingenioso para extraer información directamente desde archivos de Microsoft Excel (.xlsx), abriéndolos como archivos ZIP y buscando patrones de texto en sus documentos XML internos. Su rol es crítico para la adopción práctica del DSL, ya que elimina la necesidad de contar con librerías externas de terceros (como `pandas` o `openpyxl`) para ingestar conjuntos de datos comerciales estándar.
 
 ```vagax
 // Carga automática (resuelve la ruta)
@@ -302,41 +284,10 @@ listvag columnas = xlsx_columnas(tabla, nombres);
 
 ### IMAGENVAG — Procesamiento de Imágenes
 
-Ofrece la funcionalidad necesaria para abordar problemas de visión por computadora dentro de VAGAX. Desempaqueta y decodifica imágenes en formatos crudos (como BMP) o complejos (JPEG) convirtiéndolas a vectores normalizados listos para ser consumidos por una red neuronal, logrando así que el entorno del lenguaje se mantenga estricto en su política "zero-dependency" al no hacer uso de `Pillow` ni `OpenCV`.
-
 ```vagax
 // Leer imagen como vector de grises normalizado [0,1]
 // (formato JPEG o BMP, sin Pillow, sin OpenCV)
 listvag vector = imagen_leer_gris("foto.jpg", 20, 20);
-
-// Convertir directorio de imágenes a CSV
-imagen_dir_a_csv(dir_clase0, dir_clase1, "train.csv", 20, 20, 500);
-imagen_test_a_csv(dir_clase0, dir_clase1, "test.csv",  20, 20, 200);
-```
-
-### ARCHIVOSVAG — Archivos
-
-Maneja de manera unificada las operaciones de entrada y salida elementales del sistema para los scripts. Su función primordial es proporcionar acceso genérico a archivos de texto y CSV, facilitando la exportación de resultados numéricos calculados por modelos predictivos, asegurando que los programas escritos en VAGAX tengan persistencia más allá de la consola de ejecución.
-
-```vagax
-stringvag contenido = file_read("archivo.txt");
-file_write("salida.txt", "Hola VAGAX");
-listvag lineas = file_lines("datos.txt");
-csv_write("resultado.csv", tabla);
-listvag mat = csv_read("datos.csv");
-```
-
-### grafvag — Visualización
-
-Constituye la capa de salida visual del análisis de datos. Toma las coordenadas y resultados de operaciones para renderizar gráficos de manera programática, brindándole al lenguaje la capacidad interactiva y visual indispensable para observar tendencias estadísticas y comprender las curvas de aprendizaje de los algoritmos descritos previamente.
-
-```vagax
-plotvag(x_datos, y_datos);
-titlevag("Mi Gráfica");
-xlabelvag("Eje X");
-ylabelvag("Eje Y");
-showvag();
-```"foto.jpg", 20, 20);
 
 // Convertir directorio de imágenes a CSV
 imagen_dir_a_csv(dir_clase0, dir_clase1, "train.csv", 20, 20, 500);
@@ -367,7 +318,7 @@ showvag();
 
 ## Requisitos Cumplidos
 
-###  Operaciones Aritméticas Completas
+### Operaciones Aritméticas Completas
 
 Implementadas en `MATHVAG.py` y directamente en la gramática.
 
@@ -424,7 +375,7 @@ forvag (intvag j = 0; j < 5; j = j + 1) {
 
 ---
 
-###  Gráficas de Datos
+### Gráficas de Datos
 
 ```vagax
 listvag x = range(0, 0);
@@ -442,7 +393,7 @@ showvag();
 
 ---
 
-###  Manejo de Archivos
+### Manejo de Archivos
 
 ```vagax
 // Lectura de texto
@@ -481,7 +432,7 @@ floatvag prob = log_reg_predict(modelo_log, 5.0);
 
 ---
 
-###  Clasificador — Perceptrón Multicapa (MLP)
+### Clasificador — Perceptrón Multicapa (MLP)
 
 El motor `VAGML` implementa backpropagation completo desde cero:
 
@@ -506,7 +457,7 @@ floatvag loss = get(res, 0);
 
 ---
 
-###  Agrupamiento, Clasificación y Predicción con Redes Neuronales
+### Agrupamiento, Clasificación y Predicción con Redes Neuronales
 
 ```vagax
 // CLUSTERING — K-Means
@@ -578,27 +529,27 @@ python main.py
 
 ## Ejemplos por Categoría
 
-| Archivo `.vagax`              | Categoría              | Descripción                                          |
-|-------------------------------|------------------------|------------------------------------------------------|
-| `suma.vagax`                  | Aritmética             | Suma básica                                          |
-| `division.vagax`              | Aritmética             | División con manejo de casos                         |
-| `modulo.vagax`                | Aritmética             | Operador módulo `%`                                  |
-| `taylor_exp.vagax`            | Matemáticas            | Serie de Taylor para exponencial                     |
-| `fib.vagax`                   | Recursión              | Fibonacci recursivo                                  |
-| `euclides.vagax`              | Algoritmos             | GCD por algoritmo de Euclides                        |
-| `bubblesort.vagax`            | Algoritmos             | Ordenamiento burbuja                                 |
-| `nPrfimo.vagax`               | Algoritmos             | Números primos                                       |
-| `prueba.vagax`                | Matrices               | Operaciones matriciales                              |
-| `regresion.vagax`             | ML                     | Regresión lineal y logística con datos de ejemplo    |
-| `regresionlineal.vagax`       | ML                     | Regresión lineal genérica sobre cualquier `.xlsx`    |
-| `test_xor_ML.vagax`           | Deep Learning          | Backpropagation — compuerta XOR                      |
-| `test_clasificacion_ML.vagax` | Deep Learning          | MLP clasificador binario                             |
-| `test_kmeans_ML.vagax`        | ML                     | Clustering K-Means                                   |
-| `test_loss_ML.vagax`          | Deep Learning          | Curva de pérdida por épocas                          |
-| `test_regresion_ML.vagax`     | ML                     | Regresión completa con VAGML                         |
-| `analisisestadistico.vagax`   | Estadística            | Análisis de todas las columnas numéricas de un xlsx  |
-| `df.vagax`                    | DataFrames             | Operaciones con dataframe                            |
-| `machinelearning/*.vagax`     | Computer Vision        | Clasificador Muffin vs Chihuahua (imágenes JPEG)     |
+| Archivo `.vagax`              | Categoría       | Descripción                                         |
+| ----------------------------- | --------------- | --------------------------------------------------- |
+| `suma.vagax`                  | Aritmética      | Suma básica                                         |
+| `division.vagax`              | Aritmética      | División con manejo de casos                        |
+| `modulo.vagax`                | Aritmética      | Operador módulo `%`                                 |
+| `taylor_exp.vagax`            | Matemáticas     | Serie de Taylor para exponencial                    |
+| `fib.vagax`                   | Recursión       | Fibonacci recursivo                                 |
+| `euclides.vagax`              | Algoritmos      | GCD por algoritmo de Euclides                       |
+| `bubblesort.vagax`            | Algoritmos      | Ordenamiento burbuja                                |
+| `nPrfimo.vagax`               | Algoritmos      | Números primos                                      |
+| `prueba.vagax`                | Matrices        | Operaciones matriciales                             |
+| `regresion.vagax`             | ML              | Regresión lineal y logística con datos de ejemplo   |
+| `regresionlineal.vagax`       | ML              | Regresión lineal genérica sobre cualquier `.xlsx`   |
+| `test_xor_ML.vagax`           | Deep Learning   | Backpropagation — compuerta XOR                     |
+| `test_clasificacion_ML.vagax` | Deep Learning   | MLP clasificador binario                            |
+| `test_kmeans_ML.vagax`        | ML              | Clustering K-Means                                  |
+| `test_loss_ML.vagax`          | Deep Learning   | Curva de pérdida por épocas                         |
+| `test_regresion_ML.vagax`     | ML              | Regresión completa con VAGML                        |
+| `analisisestadistico.vagax`   | Estadística     | Análisis de todas las columnas numéricas de un xlsx |
+| `df.vagax`                    | DataFrames      | Operaciones con dataframe                           |
+| `machinelearning/*.vagax`     | Computer Vision | Clasificador Muffin vs Chihuahua (imágenes JPEG)    |
 
 ---
 
@@ -608,17 +559,17 @@ El módulo `librerias/VAGML/` es un motor de aprendizaje profundo **implementado
 
 ### Componentes
 
-| Módulo           | Descripción                                               |
-|------------------|-----------------------------------------------------------|
-| `Tensor.py`      | Tensor n-dimensional, operaciones matriciales, autograd   |
-| `Layer.py`       | Capa `Dense` con pesos y bias aleatorios                  |
-| `Activation.py`  | `ReLU`, `Sigmoid`, `Tanh`, `Softmax`, `LeakyReLU`         |
-| `Losses.py`      | `MSE`, `BCE` (Binary Cross-Entropy), `CrossEntropy`       |
-| `Optimizers.py`  | `SGD` (con momentum), `Adam`                              |
-| `MLP.py`         | Perceptrón Multicapa — forward/backward pass              |
-| `Data.py`        | `DataLoader` con mini-batches y shuffle                   |
+| Módulo             | Descripción                                             |
+| ------------------ | ------------------------------------------------------- |
+| `Tensor.py`        | Tensor n-dimensional, operaciones matriciales, autograd |
+| `Layer.py`         | Capa `Dense` con pesos y bias aleatorios                |
+| `Activation.py`    | `ReLU`, `Sigmoid`, `Tanh`, `Softmax`, `LeakyReLU`       |
+| `Losses.py`        | `MSE`, `BCE` (Binary Cross-Entropy), `CrossEntropy`     |
+| `Optimizers.py`    | `SGD` (con momentum), `Adam`                            |
+| `MLP.py`           | Perceptrón Multicapa — forward/backward pass            |
+| `Data.py`          | `DataLoader` con mini-batches y shuffle                 |
 | `ENTRENAMIENTO.py` | Loop de entrenamiento supervisado completo              |
-| `Trainer.py`     | Trainer de alto nivel con validación                      |
+| `Trainer.py`       | Trainer de alto nivel con validación                    |
 
 ### Arquitectura de ejemplo (Muffin vs Chihuahua)
 
@@ -641,18 +592,18 @@ Input(400 features)
 
 VAGAX es completamente autocontenido. Todas las librerías estándar de Python han sido reimplementadas dentro del proyecto:
 
-| Librería Python | Reemplazada por  | Implementación                                  |
-|-----------------|------------------|-------------------------------------------------|
-| `struct`        | `STRUCTVAG`      | Parser binario con aritmética de bits            |
-| `os`            | `OSVAG`          | Rutas, listado de directorios, I/O de archivos  |
-| `sys`           | `SYSVAG`         | Gestión de path, argumentos CLI, CWD            |
-| `random`        | `VAGRandom`      | Generador LCG (Linear Congruential Generator)   |
-| `openpyxl`      | `XLSXVAG`        | Parser ZIP+XML para archivos `.xlsx`            |
-| `PIL/Pillow`    | `IMAGENVAG`      | Decodificador JPEG/BMP + nearest-neighbor resize|
-| `numpy`         | `VAGML/Tensor`   | Tensor n-dimensional con operaciones matriciales|
-| `tensorflow`    | `VAGML/MLP`      | Red neuronal con backpropagation                |
-| `sklearn`       | `CLASIFVAG`      | KNN, Árbol de decisión, K-Means                 |
-| `pandas`        | `DATASETVAG`     | Carga y preprocesamiento de CSV/tensores        |
+| Librería Python | Reemplazada por | Implementación                                   |
+| --------------- | --------------- | ------------------------------------------------ |
+| `struct`        | `STRUCTVAG`     | Parser binario con aritmética de bits            |
+| `os`            | `OSVAG`         | Rutas, listado de directorios, I/O de archivos   |
+| `sys`           | `SYSVAG`        | Gestión de path, argumentos CLI, CWD             |
+| `random`        | `VAGRandom`     | Generador LCG (Linear Congruential Generator)    |
+| `openpyxl`      | `XLSXVAG`       | Parser ZIP+XML para archivos `.xlsx`             |
+| `PIL/Pillow`    | `IMAGENVAG`     | Decodificador JPEG/BMP + nearest-neighbor resize |
+| `numpy`         | `VAGML/Tensor`  | Tensor n-dimensional con operaciones matriciales |
+| `tensorflow`    | `VAGML/MLP`     | Red neuronal con backpropagation                 |
+| `sklearn`       | `CLASIFVAG`     | KNN, Árbol de decisión, K-Means                  |
+| `pandas`        | `DATASETVAG`    | Carga y preprocesamiento de CSV/tensores         |
 
 > Los únicos `__import__` internos (encapsulados dentro de las librerías VAGAX) son `zipfile` para leer `.xlsx` y llamadas a nivel de motor para `listdir`. Ningún script `.vagax` del usuario puede importar librerías externas directamente.
 
@@ -679,4 +630,3 @@ Código fuente (.vagax)
 Cada nodo del AST es visitado por un método `visit*` específico en `interpreter.py`, que delega la lógica a las librerías nativas cuando corresponde.
 
 ---
-

@@ -343,6 +343,30 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "multi_lin_reg_fit": return REGREVAG.multi_lin_reg_fit(args[0], args[1])
         if name == "multi_lin_reg_predict": return REGREVAG.multi_lin_reg_predict(args[0], args[1])
 
+        # Regresión Logística Multivariable
+        if name == "log_reg_normalizar": return REGREVAG.log_reg_normalizar(args[0])
+        if name == "log_reg_normalizar_con": return REGREVAG.log_reg_normalizar_con(args[0], args[1], args[2])
+        if name == "log_reg_multi_fit":
+            lr         = args[2] if len(args) > 2 else 0.1
+            epochs     = args[3] if len(args) > 3 else 100
+            batch_size = args[4] if len(args) > 4 else 64
+            verbose    = args[5] if len(args) > 5 else True
+            return REGREVAG.log_reg_multi_fit(args[0], args[1], lr, epochs, batch_size, verbose)
+        if name == "log_reg_multi_predict_prob": return REGREVAG.log_reg_multi_predict_prob(args[0], args[1])
+        if name == "log_reg_multi_predict":
+            umbral = args[2] if len(args) > 2 else 0.5
+            return REGREVAG.log_reg_multi_predict(args[0], args[1], umbral)
+        if name == "log_reg_multi_predict_batch":
+            umbral = args[2] if len(args) > 2 else 0.5
+            return REGREVAG.log_reg_multi_predict_batch(args[0], args[1], umbral)
+        if name == "log_reg_multi_logloss": return REGREVAG.log_reg_multi_logloss(args[0], args[1], args[2])
+        if name == "log_reg_multi_accuracy":
+            umbral = args[3] if len(args) > 3 else 0.5
+            return REGREVAG.log_reg_multi_accuracy(args[0], args[1], args[2], umbral)
+        if name == "log_reg_multi_confusion":
+            umbral = args[3] if len(args) > 3 else 0.5
+            return REGREVAG.log_reg_multi_confusion(args[0], args[1], args[2], umbral)
+
         # =============================================
         # XLSX (XLSXVAG)
         # =============================================
@@ -352,6 +376,12 @@ class VAGAXInterpreter(VagaxParserVisitor):
         if name == "xlsx_columnas": return XLSXVAG.obtener_columnas_numericas(args[0], args[1])
         if name == "xlsx_resumen": return XLSXVAG.resumen(args[0])
         if name == "xlsx_headers": return XLSXVAG.get_headers(args[0])
+        if name == "tabla_leer_auto": return XLSXVAG.tabla_leer_auto(args[0])
+        if name == "tabla_leer_csv": return XLSXVAG.leer_csv_tabla(args[0], args[1] if len(args) > 1 else None)
+        if name == "tabla_resumen": return XLSXVAG.resumen(args[0])
+        if name == "tabla_headers": return XLSXVAG.get_headers(args[0])
+        if name == "tabla_columnas": return XLSXVAG.obtener_columnas_numericas(args[0], args[1])
+        if name == "tabla_columna": return XLSXVAG.obtener_columna(args[0], args[1])
 
         # =============================================
         # ARGUMENTOS DEL SCRIPT (acceso a argv CLI)
